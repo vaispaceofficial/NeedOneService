@@ -1324,3 +1324,220 @@
     padding: 16px;
   }
 }
+
+
+/* =========================================
+   VENDOR LEGAL CONSENT SECTION
+   Selectors matched to VendorRegisterPage.tsx
+========================================= */
+
+.vendor-consent-list {
+  width: 100%;
+  margin-top: 24px;
+  padding: 22px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #f8faff;
+  border: 1px solid #dce7f7;
+  border-radius: 12px;
+}
+
+.vendor-consent {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 0;
+  color: #193d63;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  cursor: pointer;
+}
+
+.vendor-consent input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  margin: 2px 0 0;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+.vendor-consent span {
+  color: #193d63;
+}
+
+.vendor-legal-document-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px 12px;
+  margin: -5px 0 8px 28px;
+  color: #718096;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.vendor-legal-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.vendor-legal-link:hover {
+  color: #193d63;
+  text-decoration: underline;
+}
+
+.vendor-legal-status {
+  margin: 0;
+  color: #526782;
+  font-size: 13px;
+}
+
+/* =========================================
+   LEGAL DOCUMENT POPUP
+========================================= */
+
+.partner-legal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(16, 43, 78, 0.58);
+  backdrop-filter: blur(4px);
+}
+
+.partner-legal-modal {
+  width: min(760px, 100%);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e1eaf5;
+  border-radius: 16px;
+  box-shadow: 0 22px 65px rgba(16, 43, 78, 0.22);
+}
+
+.partner-legal-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  background: #f8faff;
+  border-bottom: 1px solid #e7edf6;
+}
+
+.partner-legal-modal-header h2 {
+  margin: 6px 0;
+  color: #193d63;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.partner-legal-modal-header p {
+  margin: 0;
+  color: #718096;
+  font-size: 12px;
+}
+
+.partner-legal-close {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dce5f1;
+  border-radius: 9px;
+  background: #fff;
+  color: #526782;
+  cursor: pointer;
+}
+
+.partner-legal-close:hover {
+  color: #2563eb;
+  background: #eff5ff;
+  border-color: #2563eb;
+}
+
+.partner-legal-content {
+  padding: 24px;
+  overflow-y: auto;
+  color: #43546b;
+  font-size: 14px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.partner-legal-content p {
+  margin: 0 0 14px;
+}
+
+.vendor-legal-paragraph-space {
+  height: 10px;
+}
+
+.partner-legal-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid #e7edf6;
+  background: #fff;
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .vendor-consent-list {
+    padding: 16px;
+  }
+
+  .vendor-consent {
+    font-size: 13px;
+  }
+
+  .vendor-legal-document-row {
+    margin-left: 27px;
+    font-size: 11px;
+  }
+
+  .partner-legal-overlay {
+    padding: 12px;
+  }
+
+  .partner-legal-modal {
+    max-height: 90vh;
+  }
+
+  .partner-legal-modal-header {
+    padding: 16px;
+  }
+
+  .partner-legal-modal-header h2 {
+    font-size: 16px;
+  }
+
+  .partner-legal-content {
+    padding: 17px;
+    font-size: 13px;
+  }
+
+  .partner-legal-modal-footer {
+    padding: 13px 16px;
+  }
+}

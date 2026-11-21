@@ -67,6 +67,7 @@ type ProfessionalFormData = {
   password: string;
   confirmPassword: string;
   terms: boolean;
+  privacyAccepted: boolean;
   verificationConsent: boolean;
 };
 
@@ -103,6 +104,7 @@ const initialForm: ProfessionalFormData = {
   password: "",
   confirmPassword: "",
   terms: false,
+  privacyAccepted: false,
   verificationConsent: false,
 };
 
@@ -761,7 +763,14 @@ export default function ProfessionalRegisterPage() {
 
     if (!checked) {
       setLegalAcceptance(null);
-      updateField("terms", false);
+
+      if (documentType === "Terms & Conditions") {
+        updateField("terms", false);
+        updateField("privacyAccepted", false);
+      } else {
+        updateField("privacyAccepted", false);
+      }
+
       return;
     }
 
@@ -773,15 +782,17 @@ export default function ProfessionalRegisterPage() {
       return;
     }
 
-    const acceptedAt = new Date().toISOString();
+    if (documentType === "Terms & Conditions") {
+      updateField("terms", true);
+    } else {
+      updateField("privacyAccepted", true);
+    }
 
     setLegalAcceptance({
       termsVersion: termsDocument.current_version,
       privacyVersion: privacyDocument.current_version,
-      acceptedAt,
+      acceptedAt: new Date().toISOString(),
     });
-
-    updateField("terms", true);
   };
 
   const validateStep = (step: number): boolean => {
