@@ -7,6 +7,7 @@ import { pool } from "./config/database.js";
 
 import complianceRoutes from "./routes/compliance.routes.js";
 import legalDocumentsRoutes from "./routes/legalDocuments.routes.js";
+import registrationConsentRoutes from "./routes/registrationConsent.routes.js";
 
 dotenv.config();
 
@@ -40,6 +41,12 @@ app.use(
 app.use(
   "/api/legal-documents",
   legalDocumentsRoutes
+);
+
+// Vendor registration legal consent
+app.use(
+  "/api/registration-consents",
+  registrationConsentRoutes
 );
 
 // ================================================
