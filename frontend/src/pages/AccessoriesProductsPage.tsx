@@ -1,0 +1,790 @@
+
+import { useEffect, useMemo, useState, useCallback } from "react";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
+import {
+  Search,
+  ShoppingCart,
+  ChevronDown,
+  SlidersHorizontal,
+  Star,
+  ArrowRight,
+  ChevronRight,
+  PackageSearch,
+} from "lucide-react";
+
+import {
+  getMarketplaceProducts,
+  getMarketplaceCategories,
+  subscribeToSellerProducts,
+} from "../data/marketplaceProducts";
+
+import type { AccessoryProduct } from "../data/accessoriesProducts";
+
+import CartShortcut from "../components/CartShortcut";
+import { addToCart } from "../data/cart";
+
+import "./AccessoriesProductsPage.css";
+
+function AccessoriesProductsPage() {
+  const { categorySlug, subcategorySlug } = useParams<{
+    categorySlug?: string;
+    subcategorySlug?: string;
+  }>();
+
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  /* =========================================================
+     MARKETPLACE DATA
+  ========================================================= */
+
+  const [marketplaceProducts, setMarketplaceProducts] = useState<
+    AccessoryProduct[]
+  >(() => getMarketplaceProducts());
+
+  const [marketplaceCategories, setMarketplaceCategories] = useState(
+    () => getMarketplaceCategories()
+  );
+
+  const refreshMarketplace = useCallback(() => {
+    setMarketplaceProducts(getMarketplaceProducts());
+    setMarketplaceCategories(getMarketplaceCategories());
+  }, []);
+
+  useEffect(() => {
+    // Initial refresh.
+    refreshMarketplace();
+
+    // Listen for seller/admin marketplace changes.
+    const unsubscribe = subscribeToSellerProducts(refreshMarketplace);
+
+    // Refresh when the user returns to this browser tab.
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        refreshMarketplace();
+      }
+    };
+
+    // Refresh when the page receives focus.
+    const handleWindowFocus = () => {
+      refreshMarketplace();
+    };
+
+    document.addEventListener(
+      "visibilitychange",
+      handleVisibilityChange
+    );
+
+    window.addEventListener("focus", handleWindowFocus);
+
+    return () => {
+      unsubscribe();
+
+      document.removeEventListener(
+        "visibilitychange",
+        handleVisibilityChange
+      );
+
+      window.removeEventListener("focus", handleWindowFocus);
+    };
+  }, [refreshMarketplace]);
+
+  /* =========================================================
+     SEARCH AND FILTER STATE
+  ========================================================= */
+
+  const [search, setSearch] = useState(() => {
+    return new URLSearchParams(location.search).get("search") || "";
+  });
+
+  const [sort, setSort] = useState("featured");
+  const [showFilters, setShowFilters] = useState(false);
+  const [fastDelivery, setFastDelivery] = useState(false);
+  const [installationAvailable, setInstallationAvailable] =
+    useState(false);
+  const [minimumRating, setMinimumRating] = useState(0);
+
+  useEffect(() => {
+    const urlSearch =
+      new URLSearchParams(location.search).get("search") || "";
+
+    setSearch(urlSearch);
+  }, [location.search]);
+
+  /* =========================================================
+     CATEGORY INFORMATION
+  ========================================================= */
+
+  const activeCategory = categorySlug || "all";
+
+  const activeCategoryData = marketplaceCategories.find(
+    (category) => category.slug === activeCategory
+  );
+
+  const activeSubcategory = activeCategoryData?.subcategories.find(
+    (subcategory) => subcategory.slug === subcategorySlug
+  );
+
+  const activeCategoryName =
+    activeCategory === "all"
+      ? "All Products"
+      : activeCategoryData?.name || "Products";
+
+  /* =========================================================
+     ROUTES
+  ========================================================= */
+
+  const getProductUrl = (productId: string | number) =>
+    `/accessories-sales/products/${productId}`;
+
+  const categoryUrl = (slug: string) =>
+    slug === "all" ? "/accessories/all" : `/accessories/${slug}`;
+
+  const subcategoryUrl = (
+    category: string,
+    subcategory: string
+  ) => `/accessories/${category}/${subcategory}`;
+
+  /* =========================================================
+     FILTER AND SORT PRODUCTS
+  ========================================================= */
+
+  const filteredProducts = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    // Remove duplicate IDs while preserving catalogue order.
+    const uniqueProducts = Array.from(
+      new Map(
+        marketplaceProducts.map((product) => [
+          String(product.id),
+          product,
+        ])
+      ).values()
+    );
+
+    let result = uniqueProducts.filter((product) => {
+      const matchesCategory =
+        activeCategory === "all" ||
+        product.categorySlug === activeCategory;
+
+      const matchesSubcategory =
+        !subcategorySlug ||
+        product.subcategorySlug === subcategorySlug;
+
+      const matchesSearch =
+        !normalizedSearch ||
+        product.name.toLowerCase().includes(normalizedSearch) ||
+        product.category.toLowerCase().includes(normalizedSearch) ||
+        (product.subcategorySlug || "")
+          .toLowerCase()
+          .includes(normalizedSearch) ||
+        product.description.toLowerCase().includes(normalizedSearch);
+
+      const matchesDelivery =
+        (!fastDelivery || product.fastDelivery === true) &&
+        (!installationAvailable ||
+          product.installationAvailable === true);
+
+      const matchesRating =
+        minimumRating === 0 ||
+        product.rating >= minimumRating;
+
+      return (
+        matchesCategory &&
+        matchesSubcategory &&
+        matchesSearch &&
+        matchesDelivery &&
+        matchesRating
+      );
+    });
+
+    switch (sort) {
+      case "price-low":
+        result = [...result].sort(
+          (a, b) => a.price - b.price
+        );
+        break;
+
+      case "price-high":
+        result = [...result].sort(
+          (a, b) => b.price - a.price
+        );
+        break;
+
+      case "rating":
+        result = [...result].sort(
+          (a, b) => b.rating - a.rating
+        );
+        break;
+
+      default:
+        break;
+    }
+
+    return result;
+  }, [
+    marketplaceProducts,
+    activeCategory,
+    subcategorySlug,
+    search,
+    sort,
+    fastDelivery,
+    installationAvailable,
+    minimumRating,
+  ]);
+
+  /* =========================================================
+     PRODUCT SECTIONS
+  ========================================================= */
+
+  const mainProducts = filteredProducts.slice(0, 3);
+
+  const suggestedProducts = filteredProducts.slice(3);
+
+  const hasActiveFilters =
+    search.trim() !== "" ||
+    fastDelivery ||
+    installationAvailable ||
+    minimumRating > 0;
+
+  /* =========================================================
+     FILTER ACTIONS
+  ========================================================= */
+
+  const clearFilters = () => {
+    setSearch("");
+    setFastDelivery(false);
+    setInstallationAvailable(false);
+    setMinimumRating(0);
+    setSort("featured");
+
+    const params = new URLSearchParams(location.search);
+    params.delete("search");
+
+    const nextSearch = params.toString();
+
+    navigate(
+      {
+        pathname: location.pathname,
+        search: nextSearch ? `?${nextSearch}` : "",
+      },
+      { replace: true }
+    );
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+  };
+
+  /* =========================================================
+     CART
+  ========================================================= */
+
+  const handleAddToCart = (product: AccessoryProduct) => {
+    addToCart(product);
+    navigate("/cart");
+  };
+
+  /* =========================================================
+     RENDER
+  ========================================================= */
+
+  return (
+    <main className="accessories-products-page">
+      {/* CART SHORTCUT */}
+      <div className="products-page-cart">
+        <CartShortcut />
+      </div>
+
+      {/* PAGE HEADING AND SEARCH */}
+      <section className="products-page-top">
+        <div className="products-page-heading">
+          <span>MARKETPLACE</span>
+
+          <h1>
+            {activeSubcategory?.name || activeCategoryName}
+          </h1>
+
+          <p>
+            Explore products, spare parts and accessories from
+            NeedOneService.
+          </p>
+        </div>
+
+        <form
+          className="products-page-search"
+          onSubmit={(event) => {
+            event.preventDefault();
+
+            const params = new URLSearchParams(location.search);
+            const query = search.trim();
+
+            if (query) {
+              params.set("search", query);
+            } else {
+              params.delete("search");
+            }
+
+            const nextSearch = params.toString();
+
+            navigate(
+              {
+                pathname: location.pathname,
+                search: nextSearch ? `?${nextSearch}` : "",
+              },
+              { replace: true }
+            );
+          }}
+        >
+          <Search size={19} aria-hidden="true" />
+
+          <input
+            type="search"
+            placeholder="Search products, spare parts..."
+            aria-label="Search products"
+            value={search}
+            onChange={(event) =>
+              handleSearchChange(event.target.value)
+            }
+          />
+
+          {search && (
+            <button
+              type="button"
+              onClick={() => handleSearchChange("")}
+              aria-label="Clear search"
+            >
+              Clear
+            </button>
+          )}
+        </form>
+      </section>
+
+      {/* SIDEBAR AND PRODUCT RESULTS */}
+      <section className="products-marketplace">
+        <aside
+          className={`products-sidebar ${
+            showFilters ? "mobile-visible" : ""
+          }`}
+        >
+          <div className="sidebar-heading">
+            <strong>Categories</strong>
+            <Link to="/accessories/all">View all</Link>
+          </div>
+
+          <div className="sidebar-categories">
+            <Link
+              to="/accessories/all"
+              className={activeCategory === "all" ? "active" : ""}
+              onClick={() => setShowFilters(false)}
+            >
+              All Products
+            </Link>
+
+            {marketplaceCategories.map((category) => {
+              const isActive = activeCategory === category.slug;
+
+              return (
+                <div
+                  className="sidebar-category-group"
+                  key={category.slug}
+                >
+                  <Link
+                    to={categoryUrl(category.slug)}
+                    className={isActive ? "active" : ""}
+                    onClick={() => setShowFilters(false)}
+                  >
+                    <span>{category.name}</span>
+                    <ChevronRight size={15} />
+                  </Link>
+
+                  {isActive && (
+                    <div className="sidebar-subcategories">
+                      {category.subcategories.map((subcategory) => (
+                        <Link
+                          key={subcategory.slug}
+                          to={subcategoryUrl(
+                            category.slug,
+                            subcategory.slug
+                          )}
+                          className={
+                            subcategorySlug === subcategory.slug
+                              ? "active"
+                              : ""
+                          }
+                          onClick={() => setShowFilters(false)}
+                        >
+                          {subcategory.name}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="sidebar-divider" />
+
+          <div className="sidebar-filter-section">
+            <strong>Delivery &amp; service</strong>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={fastDelivery}
+                onChange={(event) =>
+                  setFastDelivery(event.target.checked)
+                }
+              />
+              <span>Fast delivery</span>
+            </label>
+
+            <label>
+              <input
+                type="checkbox"
+                checked={installationAvailable}
+                onChange={(event) =>
+                  setInstallationAvailable(event.target.checked)
+                }
+              />
+              <span>Installation available</span>
+            </label>
+          </div>
+
+          <div className="sidebar-filter-section">
+            <strong>Customer rating</strong>
+
+            {[4, 3, 2].map((rating) => (
+              <label key={rating}>
+                <input
+                  type="radio"
+                  name="minimum-rating"
+                  checked={minimumRating === rating}
+                  onChange={() => setMinimumRating(rating)}
+                />
+
+                <span className="rating-option">
+                  <Star size={13} fill="currentColor" />
+                  {rating} &amp; above
+                </span>
+              </label>
+            ))}
+
+            {minimumRating > 0 && (
+              <button
+                type="button"
+                className="clear-rating"
+                onClick={() => setMinimumRating(0)}
+              >
+                Clear rating
+              </button>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="clear-filters-button"
+            onClick={clearFilters}
+          >
+            Clear all filters
+          </button>
+        </aside>
+
+        <div className="products-results">
+          {/* BREADCRUMB */}
+          <nav
+            className="products-breadcrumb"
+            aria-label="Breadcrumb"
+          >
+            <Link to="/accessories-sales">
+              Marketplace
+            </Link>
+
+            <ChevronRight size={14} />
+
+            <Link to="/accessories/all">All Products</Link>
+
+            {activeCategoryData && (
+              <>
+                <ChevronRight size={14} />
+
+                <Link to={categoryUrl(activeCategory)}>
+                  {activeCategoryData.name}
+                </Link>
+              </>
+            )}
+
+            {activeSubcategory && (
+              <>
+                <ChevronRight size={14} />
+                <span>{activeSubcategory.name}</span>
+              </>
+            )}
+          </nav>
+
+          {/* RESULTS TOOLBAR */}
+          <div className="products-results-toolbar">
+            <button
+              type="button"
+              className="mobile-filter-button"
+              onClick={() => setShowFilters((value) => !value)}
+              aria-expanded={showFilters}
+            >
+              <SlidersHorizontal size={17} />
+              Filters
+            </button>
+
+            <div className="results-count">
+              <strong>{filteredProducts.length}</strong>
+
+              <span>
+                {filteredProducts.length === 1
+                  ? "product"
+                  : "products"}
+              </span>
+            </div>
+
+            <div className="sort-control">
+              <span>Sort by</span>
+
+              <div className="sort-select">
+                <select
+                  value={sort}
+                  onChange={(event) =>
+                    setSort(event.target.value)
+                  }
+                  aria-label="Sort products"
+                >
+                  <option value="featured">Featured</option>
+                  <option value="price-low">
+                    Price: Low to High
+                  </option>
+                  <option value="price-high">
+                    Price: High to Low
+                  </option>
+                  <option value="rating">
+                    Customer Rating
+                  </option>
+                </select>
+
+                <ChevronDown size={15} aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+
+          {/* PRODUCTS */}
+          {filteredProducts.length > 0 ? (
+            <div className="products-suggestions-layout">
+              <section className="main-products-section">
+                <div className="main-products-grid">
+                  {mainProducts.map((product) => {
+                    const discount =
+                      product.oldPrice > product.price &&
+                      product.oldPrice > 0
+                        ? Math.round(
+                            ((product.oldPrice - product.price) /
+                              product.oldPrice) *
+                              100
+                          )
+                        : 0;
+
+                    const productUrl = getProductUrl(product.id);
+
+                    return (
+                      <article
+                        className="marketplace-product-card"
+                        key={product.id}
+                      >
+                        <Link
+                          to={productUrl}
+                          className="marketplace-product-image"
+                          aria-label={`View ${product.name}`}
+                        >
+                          {product.badge && (
+                            <span className="marketplace-badge">
+                              {product.badge}
+                            </span>
+                          )}
+
+                          <div>{product.image}</div>
+                        </Link>
+
+                        <div className="marketplace-product-content">
+                          <span className="marketplace-category">
+                            {product.category}
+                          </span>
+
+                          <Link to={productUrl}>
+                            <h2>{product.name}</h2>
+                          </Link>
+
+                          <div className="product-rating">
+                            <span>
+                              {product.rating.toFixed(1)}
+                            </span>
+
+                            <Star
+                              size={13}
+                              fill="currentColor"
+                              aria-hidden="true"
+                            />
+
+                            <span>({product.reviews})</span>
+                          </div>
+
+                          <div className="marketplace-price">
+                            <strong>
+                              ₹{product.price.toLocaleString("en-IN")}
+                            </strong>
+
+                            {discount > 0 && (
+                              <>
+                                <span>
+                                  ₹
+                                  {product.oldPrice.toLocaleString(
+                                    "en-IN"
+                                  )}
+                                </span>
+
+                                <em>{discount}% off</em>
+                              </>
+                            )}
+                          </div>
+
+                          <p className="delivery-text">
+                            {product.fastDelivery
+                              ? "Fast delivery available"
+                              : "Delivery details at checkout"}
+                          </p>
+
+                          <div className="marketplace-actions">
+                            <button
+                              type="button"
+                              className="add-cart-button"
+                              onClick={() =>
+                                handleAddToCart(product)
+                              }
+                            >
+                              <ShoppingCart size={15} />
+                              Add to cart
+                            </button>
+
+                            <Link
+                              to={productUrl}
+                              className="details-button"
+                              aria-label={`View ${product.name}`}
+                            >
+                              <ArrowRight size={16} />
+                            </Link>
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+
+              {/* SUGGESTED PRODUCTS */}
+              {suggestedProducts.length > 0 && (
+                <aside className="suggested-products">
+                  <div className="suggested-products-heading">
+                    <div>
+                      <span>DISCOVER MORE</span>
+                      <h2>Suggested Products</h2>
+                    </div>
+
+                    <PackageSearch size={21} />
+                  </div>
+
+                  <div className="suggested-products-grid">
+                    {suggestedProducts.map((product) => (
+                      <Link
+                        to={getProductUrl(product.id)}
+                        className="suggested-product-card"
+                        key={product.id}
+                      >
+                        <div className="suggested-product-image">
+                          {product.image}
+                        </div>
+
+                        <div className="suggested-product-info">
+                          <span>{product.category}</span>
+                          <h3>{product.name}</h3>
+
+                          <div className="suggested-rating">
+                            <Star
+                              size={12}
+                              fill="currentColor"
+                              aria-hidden="true"
+                            />
+                            {product.rating.toFixed(1)}
+                          </div>
+
+                          <strong>
+                            ₹{product.price.toLocaleString("en-IN")}
+                          </strong>
+                        </div>
+
+                        <ArrowRight
+                          className="suggested-arrow"
+                          size={15}
+                        />
+                      </Link>
+                    ))}
+                  </div>
+                </aside>
+              )}
+            </div>
+          ) : (
+            /* EMPTY STATE */
+            <div className="products-empty">
+              <div className="products-empty-icon">✨</div>
+
+              <span className="coming-soon-label">
+                {hasActiveFilters
+                  ? "NO MATCHES FOUND"
+                  : "COMING SOON"}
+              </span>
+
+              <h2>
+                {hasActiveFilters
+                  ? "No matching products found"
+                  : "More Products Are Yet to Come!"}
+              </h2>
+
+              <p>
+                {hasActiveFilters
+                  ? "Try a different search or adjust your filters."
+                  : "We're working on adding products to this category. Please check back soon."}
+              </p>
+
+              <button
+                type="button"
+                className="coming-soon-button"
+                onClick={clearFilters}
+              >
+                Clear filters
+              </button>
+
+              <Link
+                to="/accessories/all"
+                className="browse-products-link"
+              >
+                Browse All Products
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
+  );
+}
+
+export default AccessoriesProductsPage;

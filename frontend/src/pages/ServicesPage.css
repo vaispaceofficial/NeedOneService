@@ -1,0 +1,1088 @@
+
+/* =========================================
+   ONESERVICE — SERVICES PAGE
+   White + Brand Blue | Neulis Sans
+========================================= */
+
+.services-page {
+  --services-blue: #2563eb;
+  --services-blue-light: #3b82f6;
+  --services-text: #172033;
+  --services-muted: #64748b;
+  --services-border: #e2e8f0;
+  --services-surface: #ffffff;
+  --services-background: #f7faff;
+
+  min-height: 100vh;
+  padding: 40px 5% 80px;
+  background: var(--services-background);
+  color: var(--services-text);
+  font-family: "Neulis Sans", sans-serif;
+}
+
+/* =========================================
+   HERO
+========================================= */
+
+.services-page-hero {
+  position: relative;
+  width: 100%;
+  max-width: 1440px;
+  min-height: 350px;
+  margin: 0 auto 42px;
+  padding: 40px 48px;
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid #dbeafe;
+  border-radius: 26px;
+}
+
+.services-hero-inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  align-items: center;
+  gap: 28px;
+  width: 100%;
+  min-height: 268px;
+}
+
+.services-hero-copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 680px;
+  min-width: 0;
+}
+
+.services-page-eyebrow {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: var(--services-blue);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.services-page-hero h1 {
+  margin: 0;
+  color: #172033;
+  font-size: clamp(36px, 3.9vw, 64px);
+  font-weight: 750;
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+}
+
+.services-page-hero h1 span {
+  color: var(--services-blue);
+}
+
+.services-page-hero p {
+  max-width: 620px;
+  margin: 22px 0 0;
+  color: var(--services-muted);
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+/* =========================================
+   HERO ANIMATION AREA
+========================================= */
+
+.services-hero-animation {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 340px;
+  min-width: 0;
+  justify-self: center;
+  overflow: visible;
+  isolation: isolate;
+}
+
+/* Soft blue background glow */
+
+.service-orbit-glow {
+  position: absolute;
+  z-index: -1;
+  top: 10px;
+  left: 50%;
+  width: 320px;
+  height: 250px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse,
+    rgba(59, 130, 246, 0.13) 0%,
+    rgba(219, 234, 254, 0.07) 48%,
+    transparent 75%
+  );
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+/*
+  The SVG and moving cards use the same
+  440 × 300 coordinate stage.
+*/
+
+.service-orbit-stage {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 440px;
+  height: 300px;
+  transform: translateX(-50%);
+  transform-origin: top center;
+}
+
+/* =========================================
+   DOTTED SEMICIRCLE
+========================================= */
+
+.service-orbit-path {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 440px;
+  height: 300px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.service-orbit-flow-line {
+  animation: service-dots-flow 5s linear infinite;
+}
+
+@keyframes service-dots-flow {
+  to {
+    stroke-dashoffset: -52;
+  }
+}
+
+/* =========================================
+   REVOLVING SERVICE CARDS
+========================================= */
+
+.service-orbit-card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  width: 150px;
+  height: 48px;
+  padding: 5px 8px;
+  box-sizing: border-box;
+
+  border: 1px solid #dbeafe;
+  border-radius: 10px;
+  background: #2563eb;
+  color: #ffffff;
+
+  box-shadow:
+    0 6px 18px rgba(37, 99, 235, 0.09),
+    0 2px 5px rgba(15, 23, 42, 0.025);
+
+  white-space: nowrap;
+  pointer-events: auto;
+
+  offset-position: 0 0;
+  offset-path: path(
+    "M 35 250 C 65 20, 375 20, 405 250"
+  );
+  offset-anchor: center;
+  offset-rotate: 0deg;
+  offset-distance: 0%;
+
+  animation: service-card-orbit 15s linear infinite;
+  will-change: offset-distance;
+}
+
+/* Stagger the cards around the semicircle */
+
+.service-orbit-card-1 {
+  animation-delay: 0s;
+}
+
+.service-orbit-card-2 {
+  animation-delay: -5s;
+}
+
+.service-orbit-card-3 {
+  animation-delay: -10s;
+}
+
+/* Orbit animation — unchanged */
+
+@keyframes service-card-orbit {
+  from {
+    offset-distance: 0%;
+  }
+
+  to {
+    offset-distance: 100%;
+  }
+}
+
+/* Icon box — retain light background and blue icon */
+
+.service-orbit-card .service-flow-icon {
+  display: flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+
+  border-radius: 8px;
+  background: #eff6ff;
+  color: var(--services-blue);
+}
+
+.service-orbit-card .service-flow-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Service name — white */
+
+.service-orbit-card .service-flow-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+
+  color: #ffffff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.3;
+
+  text-overflow: ellipsis;
+}
+
+/* Arrow — white */
+
+.service-orbit-card .service-flow-arrow {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+
+  width: 12px;
+  height: 12px;
+
+  color: #ffffff;
+}
+
+.service-orbit-card .service-flow-arrow svg {
+  width: 12px;
+  height: 12px;
+  color: #ffffff;
+}
+
+/* =========================================
+   HERO BOTTOM CAPTION
+========================================= */
+
+.service-orbit-caption {
+  position: absolute;
+  right: 0;
+  bottom: 12px;
+  left: 0;
+  z-index: 3;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  color: #526581;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.service-flow-caption-dot {
+  flex: 0 0 9px;
+  width: 9px;
+  height: 9px;
+
+  border-radius: 50%;
+  background: var(--services-blue);
+  box-shadow: 0 0 0 5px #eff6ff;
+}
+
+/* =========================================
+   SERVICES BROWSER
+========================================= */
+
+.services-browser {
+  width: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+}
+
+.services-browser-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 28px;
+}
+
+.services-small-label {
+  display: inline-block;
+  margin-bottom: 9px;
+
+  color: var(--services-blue);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.services-browser-top h2 {
+  margin: 0;
+  color: var(--services-text);
+  font-size: clamp(24px, 2.5vw, 32px);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+/* =========================================
+   SEARCH
+========================================= */
+
+.services-search {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 11px;
+
+  width: 100%;
+  max-width: 350px;
+  min-height: 48px;
+  padding: 0 15px;
+  box-sizing: border-box;
+
+  background: var(--services-surface);
+  border: 1px solid var(--services-border);
+  border-radius: 12px;
+
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.04);
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.services-search:focus-within {
+  border-color: var(--services-blue-light);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+}
+
+.services-search svg {
+  flex-shrink: 0;
+  color: var(--services-blue);
+}
+
+.services-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 12px 0;
+
+  border: none;
+  outline: none;
+  background: transparent;
+
+  color: var(--services-text);
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.services-search input::placeholder {
+  color: #94a3b8;
+}
+
+/* =========================================
+   CATEGORY TABS
+========================================= */
+
+.category-tabs {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin-bottom: 30px;
+  padding: 4px 0 12px;
+  overflow-x: auto;
+
+  scrollbar-width: thin;
+  scrollbar-color: #bfdbfe transparent;
+}
+
+.category-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  min-height: 42px;
+  padding: 10px 17px;
+
+  border: 1px solid var(--services-border);
+  border-radius: 999px;
+  background: #ffffff;
+
+  color: #475569;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.category-tabs button:hover {
+  border-color: #bfdbfe;
+  background: #eff6ff;
+  color: var(--services-blue);
+}
+
+.category-tabs button.active {
+  border-color: var(--services-blue);
+  background: var(--services-blue);
+  color: #ffffff;
+
+  box-shadow: 0 5px 14px rgba(37, 99, 235, 0.18);
+}
+
+/* =========================================
+   SERVICE GRID
+========================================= */
+
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  align-items: stretch;
+}
+
+/* =========================================
+   SERVICE CARD
+========================================= */
+
+.service-list-card {
+  display: flex;
+  flex-direction: column;
+
+  min-width: 0;
+  overflow: hidden;
+
+  background: var(--services-surface);
+  border: 1px solid var(--services-border);
+  border-radius: 16px;
+
+  color: inherit;
+  text-decoration: none;
+
+  box-shadow: 0 6px 22px rgba(15, 23, 42, 0.045);
+
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.service-list-card:hover {
+  transform: translateY(-5px);
+  border-color: #bfdbfe;
+  box-shadow: 0 15px 34px rgba(37, 99, 235, 0.11);
+}
+
+.service-list-card:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.55);
+  outline-offset: 4px;
+}
+
+/* Service image */
+
+.service-list-image {
+  position: relative;
+  width: 100%;
+  height: 210px;
+  overflow: hidden;
+  background: #eff6ff;
+}
+
+.service-list-image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+
+  transition: transform 0.4s ease;
+}
+
+.service-list-card:hover .service-list-image img {
+  transform: scale(1.045);
+}
+
+/* Service content */
+
+.service-list-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+
+  padding: 21px;
+}
+
+.service-list-content > span {
+  display: inline-flex;
+  align-items: center;
+
+  max-width: 100%;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  overflow: hidden;
+
+  border-radius: 6px;
+  background: #eff6ff;
+
+  color: var(--services-blue);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+}
+
+.service-list-content h3 {
+  margin: 0 0 10px;
+
+  color: var(--services-text);
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.service-list-content p {
+  display: -webkit-box;
+  flex: 1;
+
+  margin: 0 0 20px;
+  overflow: hidden;
+
+  color: var(--services-muted);
+  font-size: 13px;
+  line-height: 1.75;
+
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+}
+
+
+/* =========================================
+   SERVICE CARD — PRICE & EXPLORE
+========================================= */
+
+.service-list-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+
+  width: 100%;
+  margin-top: auto;
+  padding-top: 16px;
+
+  border-top: 1px solid #edf2f7;
+}
+
+/* Price and starting label */
+.service-list-footer > strong {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+
+  color: var(--services-text);
+  font-size: 23px;
+  font-weight: 750;
+  line-height: 1.25;
+}
+
+.service-list-footer > strong::after {
+  content: "Starts From";
+  color: #2563eb;
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.4;
+  margin-left: 2px;
+}
+
+/* Explore link */
+.service-list-footer > span {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 6px;
+
+  color: var(--services-blue);
+  font-size: 13px;
+  font-weight: 700;
+
+  transition: gap 0.2s ease;
+}
+
+.service-list-card:hover .service-list-footer > span {
+  gap: 10px;
+}
+
+.service-list-footer svg {
+  flex-shrink: 0;
+}
+
+/* =========================================
+   EMPTY SEARCH RESULTS
+========================================= */
+
+.services-empty-state {
+  padding: 55px 20px;
+
+  border: 1px dashed #bfdbfe;
+  border-radius: 16px;
+  background: #ffffff;
+
+  text-align: center;
+}
+
+.services-empty-state h3 {
+  margin: 0 0 10px;
+  color: var(--services-text);
+  font-size: 22px;
+}
+
+.services-empty-state p {
+  margin: 0;
+  color: var(--services-muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 1050px) {
+  .services-page {
+    padding-right: 4%;
+    padding-left: 4%;
+  }
+
+  .services-page-hero {
+    min-height: 330px;
+    padding: 34px;
+  }
+
+  .services-hero-inner {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    gap: 12px;
+  }
+
+  .services-page-hero h1 {
+    font-size: clamp(34px, 4vw, 46px);
+  }
+
+  .services-page-hero p {
+    font-size: 14px;
+  }
+
+  .services-hero-animation {
+    height: 320px;
+  }
+
+  .service-orbit-stage {
+    transform: translateX(-50%) scale(0.86);
+    transform-origin: top center;
+  }
+
+  .services-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+
+  .service-list-image {
+    height: 200px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 700px) {
+  .services-page {
+    padding: 24px 18px 50px;
+  }
+
+  .services-page-hero {
+    min-height: auto;
+    margin-bottom: 32px;
+    padding: 30px 22px 20px;
+    border-radius: 18px;
+  }
+
+  .services-hero-inner {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+    min-height: auto;
+  }
+
+  .services-hero-copy {
+    max-width: none;
+  }
+
+  .services-page-eyebrow {
+    margin-bottom: 14px;
+    font-size: 11px;
+  }
+
+  .services-page-hero h1 {
+    font-size: clamp(32px, 8vw, 42px);
+    letter-spacing: -0.035em;
+  }
+
+  .services-page-hero p {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  .services-hero-animation {
+    width: 100%;
+    max-width: 440px;
+    height: 280px;
+    margin: 0 auto;
+  }
+
+  .service-orbit-stage {
+    transform: translateX(-50%) scale(0.82);
+    transform-origin: top center;
+  }
+
+  .service-orbit-caption {
+    bottom: 2px;
+    gap: 9px;
+    font-size: 11px;
+  }
+
+  .services-browser-top {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .services-browser-top h2 {
+    font-size: 25px;
+  }
+
+  .services-search {
+    max-width: none;
+  }
+
+  .category-tabs {
+    gap: 8px;
+    margin-bottom: 22px;
+  }
+
+  .category-tabs button {
+    min-height: 39px;
+    padding: 9px 14px;
+    font-size: 12px;
+  }
+
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .service-list-image {
+    height: 215px;
+  }
+
+  .service-list-content {
+    padding: 18px;
+  }
+
+  .service-list-content h3 {
+    font-size: 19px;
+  }
+
+  .service-list-content p {
+    font-size: 13px;
+  }
+}
+
+/* =========================================
+   SMALL MOBILE
+========================================= */
+
+@media (max-width: 380px) {
+  .services-page {
+    padding-right: 13px;
+    padding-left: 13px;
+  }
+
+  .services-page-hero {
+    padding: 25px 17px 18px;
+  }
+
+  .services-hero-animation {
+    height: 250px;
+  }
+
+  .service-orbit-stage {
+    transform: translateX(-50%) scale(0.70);
+  }
+
+  .service-list-image {
+    height: 185px;
+  }
+
+  .service-list-content {
+    padding: 15px;
+  }
+
+  .service-list-footer > strong {
+    font-size: 20px;
+  }
+
+  .service-list-footer > span {
+    font-size: 12px;
+  }
+}
+
+/* =========================================
+   REDUCED MOTION
+========================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .service-orbit-flow-line {
+    animation: none;
+  }
+
+  .service-orbit-card {
+    animation: none;
+    will-change: auto;
+  }
+
+  .service-orbit-card-1 {
+    offset-distance: 15%;
+  }
+
+  .service-orbit-card-2 {
+    offset-distance: 50%;
+  }
+
+  .service-orbit-card-3 {
+    offset-distance: 85%;
+  }
+
+  .service-list-card,
+  .service-list-image img,
+  .category-tabs button,
+  .service-list-footer > span {
+    transition: none;
+  }
+
+  .service-list-card:hover {
+    transform: none;
+  }
+}
+
+
+/* =========================================
+   ONESERVICE — SEARCH RESULTS INFO
+========================================= */
+
+.services-results-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  width: fit-content;
+  max-width: 100%;
+
+  margin: 28px 0 16px;
+  padding: 10px 16px;
+
+  color: #334155;
+  background: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-left: 3px solid #2563eb;
+  border-radius: 8px;
+
+  font-family: "Neulis Sans", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 0.1px;
+
+  overflow-wrap: anywhere;
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.services-results-info:hover {
+  background: #eaf2ff;
+  border-color: #bfdbfe;
+  border-left-color: #2563eb;
+}
+
+/* Highlight the matching search term */
+.services-results-info strong {
+  color: #2563eb;
+  font-weight: 700;
+}
+
+/* Responsive styling */
+@media (max-width: 600px) {
+  .services-results-info {
+    width: 100%;
+    margin: 20px 0 14px;
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+
+.services-results-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 24px;
+  height: 24px;
+  padding: 0 6px;
+
+  color: #ffffff;
+  background: #2563eb;
+  border-radius: 6px;
+
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+
+/* =========================================
+   ALL SERVICES — RIGHT-SIDE IMAGE CROP
+   Keeps the original image for service details
+========================================= */
+
+.services-grid .service-list-image {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.services-grid .service-list-image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: right center;
+  transition: transform 500ms ease;
+}
+
+/* Subtle image animation when hovering a service card */
+.services-grid .service-list-card:hover .service-list-image img {
+  transform: scale(1.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .services-grid .service-list-image img {
+    transition: none;
+  }
+
+  .services-grid .service-list-card:hover .service-list-image img {
+    transform: none;
+  }
+}
+
+
+/* =========================================
+   SERVICE CARD ICON
+========================================= */
+
+.service-list-image {
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card-icon {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 44px;
+  height: 44px;
+
+  color: #2563eb;
+  background: rgba(255, 255, 255, 0.96);
+
+  border: 1px solid #dbeafe;
+  border-radius: 13px;
+
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.10);
+
+  transition:
+    transform 180ms ease,
+    background 180ms ease,
+    color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.service-list-card:hover .service-card-icon {
+  color: #ffffff;
+  background: #2563eb;
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.25);
+  transform: translateY(-2px);
+}
+
+@media (max-width: 600px) {
+  .service-card-icon {
+    top: 12px;
+    left: 12px;
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+  }
+
+  .service-card-icon svg {
+    width: 19px;
+    height: 19px;
+  }
+}
+
