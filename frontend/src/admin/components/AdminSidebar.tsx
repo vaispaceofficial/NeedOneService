@@ -7,8 +7,11 @@ import {
   Users,
   ShoppingBag,
   Building2,
+  GraduationCap,
+  Megaphone,
   CreditCard,
   ShieldCheck,
+  Headset,
   Settings,
   LogOut,
 } from "lucide-react";
@@ -41,6 +44,16 @@ const menuItems = [
     icon: Building2,
   },
   {
+    label: "Students",
+    path: "/admin/students",
+    icon: GraduationCap,
+  },
+  {
+    label: "Advertisements",
+    path: "/admin/advertisements",
+    icon: Megaphone,
+  },
+  {
     label: "Subscription & Fees",
     path: "/admin/subscriptions",
     icon: CreditCard,
@@ -49,6 +62,11 @@ const menuItems = [
     label: "Legal & Compliance",
     path: "/admin/compliance",
     icon: ShieldCheck,
+  },
+  {
+    label: "Queries & Support",
+    path: "/admin/queries-support",
+    icon: Headset,
   },
   {
     label: "Settings",
@@ -70,6 +88,7 @@ export default function AdminSidebar() {
 
   return (
     <aside className="admin-sidebar">
+
       {/* BRAND */}
       <div className="admin-sidebar-brand">
         <div className="admin-brand-mark">N</div>
@@ -127,6 +146,7 @@ export default function AdminSidebar() {
 
       {/* BOTTOM AREA */}
       <div className="admin-sidebar-bottom">
+
         {/* WORKSPACE CARD */}
         <div className="admin-workspace-card">
           <div className="admin-workspace-top">
@@ -173,6 +193,7 @@ export default function AdminSidebar() {
             Logout
           </span>
         </button>
+
       </div>
     </aside>
   );

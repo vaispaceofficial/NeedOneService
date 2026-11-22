@@ -92,6 +92,11 @@ import SettingsPage from "./admin/pages/Settings";
 import AdminLogin from "./admin/pages/AdminLogin";
 import UsersPage from "./admin/pages/Users";
 
+import StudentsPage from "./admin/pages/Students";
+import AdvertisementsPage from "./admin/pages/Advertisements";
+import QueriesSupportPage from "./admin/pages/QueriesSupport";
+
+
 
 /* =========================================================
    GSAP SETUP
@@ -1203,43 +1208,74 @@ function AppContent() {
         />
 
         {/* PROTECTED ADMIN ROUTES */}
+
+        {/* PROTECTED ADMIN ROUTES */}
         <Route element={<AdminProtectedRoute />}>
           <Route
             path="/admin"
             element={<AdminLayout />}
           >
+            {/* DASHBOARD */}
             <Route
               index
               element={<AdminDashboard />}
             />
 
+            {/* PROFESSIONALS */}
             <Route
               path="book-services"
               element={<BookServicesPage />}
             />
 
-            <Route path="users" element={<UsersPage />} />
+            {/* USERS */}
+            <Route
+              path="users"
+              element={<UsersPage />}
+            />
 
+            {/* MARKETPLACE */}
             <Route
               path="products"
               element={<ProductsPage />}
             />
 
+            {/* CITY LISTINGS */}
             <Route
               path="businesses"
               element={<BusinessesPage />}
             />
 
+            {/* STUDENTS */}
+            <Route
+              path="students"
+              element={<StudentsPage />}
+            />
+
+            {/* ADVERTISEMENTS */}
+            <Route
+              path="advertisements"
+              element={<AdvertisementsPage />}
+            />
+
+            {/* SUBSCRIPTION & FEES */}
             <Route
               path="subscriptions"
               element={<SubscriptionsPage />}
             />
 
+            {/* LEGAL & COMPLIANCE */}
             <Route
               path="compliance"
               element={<CompliancePage />}
             />
 
+            {/* QUERIES & SUPPORT */}
+            <Route
+              path="queries-support"
+              element={<QueriesSupportPage />}
+            />
+
+            {/* SETTINGS */}
             <Route
               path="settings"
               element={<SettingsPage />}
@@ -1247,6 +1283,7 @@ function AppContent() {
           </Route>
         </Route>
       </Routes>
+
 
       {!isAdminRoute && <Footer />}
     </>

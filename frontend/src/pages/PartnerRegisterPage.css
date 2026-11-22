@@ -1632,3 +1632,136 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+
+.partner-policy-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.partner-policy-links button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 13px;
+  border: 1px solid #dbe5f2;
+  border-radius: 8px;
+  background: #f8fbff;
+  color: #2563eb;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.partner-policy-links button:hover {
+  background: #eff6ff;
+  border-color: #2563eb;
+}
+
+.partner-policy-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.62);
+}
+
+.partner-policy-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(760px, 100%);
+  max-height: 85vh;
+  overflow: hidden;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.partner-policy-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+.partner-policy-modal-header span {
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.partner-policy-modal-header h2 {
+  margin: 7px 0 0;
+  color: #172b4d;
+  font-size: 20px;
+}
+
+.partner-policy-modal-header button {
+  flex-shrink: 0;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  background: #f1f5f9;
+  color: #334155;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.partner-policy-modal-content {
+  padding: 22px 24px;
+  overflow-y: auto;
+  color: #334155;
+  line-height: 1.7;
+  white-space: pre-wrap;
+}
+
+.partner-policy-version {
+  margin: 0 0 18px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.partner-policy-document {
+  overflow-wrap: anywhere;
+}
+
+.partner-policy-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 16px 24px;
+  border-top: 1px solid #e5eaf2;
+}
+
+.partner-policy-modal-footer button {
+  padding: 10px 22px;
+  border: 0;
+  border-radius: 8px;
+  background: #2563eb;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  .partner-policy-overlay {
+    padding: 10px;
+  }
+
+  .partner-policy-modal {
+    max-height: 92vh;
+  }
+
+  .partner-policy-modal-header,
+  .partner-policy-modal-content {
+    padding: 17px;
+  }
+}

@@ -32,6 +32,8 @@ import "./StudentHub.css";
 
 type StudentApplication = {
     [key: string]: unknown;
+    id?: string | number;
+    studentId?: string | number;
     fullName?: string;
     name?: string;
     firstName?: string;
@@ -57,7 +59,6 @@ type StudentApplication = {
     specialization?: string;
     currentYear?: string | number;
     graduationYear?: string | number;
-    studentId?: string;
     interestedAreas?: string[] | string;
     skills?: string[] | string;
     experienceLevel?: string;
@@ -79,6 +80,7 @@ type StudentApplication = {
     applicationStatus?: string;
     status?: string;
     createdAt?: string;
+    submittedAt?: string;
     updatedAt?: string;
 };
 
@@ -95,6 +97,8 @@ type SectionDefinition = {
     description: string;
     fields: FieldDefinition[];
 };
+
+const API_BASE = "http://localhost:5000/api/students";
 
 const STORAGE_KEYS = [
     "oneservice_student_application",
@@ -194,6 +198,24 @@ function readStudentApplication(): StudentApplication | null {
     }
 
     return null;
+}
+
+function saveStudentLocally(student: StudentApplication): void {
+    const serialized = JSON.stringify(student);
+
+    STORAGE_KEYS.forEach((key) => {
+        localStorage.setItem(key, serialized);
+    });
+
+    window.dispatchEvent(new Event("oneservice-student-change"));
+}
+
+function getStudentRecordId(student: StudentApplication | null): string {
+    if (!student) return "";
+
+    // The database record ID is returned as "id".
+    // Registration currently also stores it as "studentId".
+    return getText(student.id || student.studentId);
 }
 
 function getText(value: unknown, fallback = ""): string {
@@ -329,7 +351,7 @@ function getFieldValue(student: StudentApplication, key: string): string {
         return getText(student.course || student.fieldOfStudy);
     }
 
-    if (key === "skills" || key === "interestedAreas" || key === "learningGoals" || key === "preferredDays") {
+    if (["skills", "interestedAreas", "learningGoals", "preferredDays"].includes(key)) {
         return getList(student[key]).join(", ");
     }
 
@@ -379,6 +401,8 @@ export default function StudentHub() {
     const navigate = useNavigate();
 
     const [student, setStudent] = useState<StudentApplication | null>(() => readStudentApplication());
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadError, setLoadError] = useState("");
     const [activeEdit, setActiveEdit] = useState<string | null>(null);
     const [draft, setDraft] = useState<StudentApplication>({});
     const [isSaving, setIsSaving] = useState(false);
@@ -386,6 +410,68 @@ export default function StudentHub() {
     const [saveSuccess, setSaveSuccess] = useState("");
     const [showRemoveModal, setShowRemoveModal] = useState(false);
     const [isRemoving, setIsRemoving] = useState(false);
+
+    // Fetch the authoritative application from PostgreSQL.
+    const loadStudentFromServer = useCallback(async () => {
+        const localStudent = readStudentApplication();
+        if (!localStudent) {
+            setStudent(null);
+            return;
+        }
+
+        setStudent(localStudent);
+
+        const studentId = getStudentRecordId(localStudent);
+
+        if (!studentId) {
+            setLoadError(
+                "This registration does not have a server record ID yet. Please complete registration again."
+            );
+            return;
+        }
+
+        setIsLoading(true);
+        setLoadError("");
+
+        try {
+            const response = await fetch(
+                `${API_BASE}/${encodeURIComponent(studentId)}`
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success || !result.student) {
+                throw new Error(result.message || "Unable to load your student application.");
+            }
+
+            const serverStudent = result.student as StudentApplication;
+
+            // Preserve the database record ID and merge any older local-only
+            // fields that are not currently returned by the registration API.
+            const mergedStudent: StudentApplication = {
+                ...localStudent,
+                ...serverStudent,
+                id: serverStudent.id || studentId,
+                studentId: serverStudent.id || studentId,
+            };
+
+            saveStudentLocally(mergedStudent);
+            setStudent(mergedStudent);
+        } catch (error) {
+            console.error("Student application loading error:", error);
+            setLoadError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to connect to the student server."
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        void loadStudentFromServer();
+    }, [loadStudentFromServer]);
 
     const refreshStudent = useCallback(() => {
         setStudent(readStudentApplication());
@@ -402,56 +488,67 @@ export default function StudentHub() {
     }, [refreshStudent]);
 
     const openEdit = useCallback((sectionId: string) => {
-        const current = readStudentApplication();
+        const current = student || readStudentApplication();
         if (!current) return;
 
         setDraft({ ...current });
         setSaveError("");
         setSaveSuccess("");
         setActiveEdit(sectionId);
-    }, []);
+    }, [student]);
 
     const closeEdit = useCallback(() => {
         if (isSaving) return;
         setActiveEdit(null);
         setSaveError("");
-        setSaveSuccess("");
     }, [isSaving]);
 
     const updateDraftField = (key: string, value: string) => {
         setDraft((previous) => ({ ...previous, [key]: value }));
     };
 
-    const saveEdits = () => {
+    // Save the edited fields to the existing PostgreSQL student record.
+    const saveEdits = async () => {
         if (!activeEdit) return;
+
+        const current = student || readStudentApplication();
+        const studentId = getStudentRecordId(current);
+
+        if (!studentId) {
+            setSaveError(
+                "Your student record ID is missing. Please complete registration before editing your profile."
+            );
+            return;
+        }
 
         setIsSaving(true);
         setSaveError("");
+        setSaveSuccess("");
 
         try {
-            const current = readStudentApplication() || {};
             const section = EDIT_SECTIONS.find((item) => item.id === activeEdit);
             const fields = activeEdit === "all"
                 ? EDIT_SECTIONS.flatMap((item) => item.fields)
                 : section?.fields ?? [];
 
-            const updated: StudentApplication = { ...current };
+            const updated: StudentApplication = { ...(current || {}) };
 
             fields.forEach(({ key }) => {
                 const value = draft[key];
 
-                // Keep multi-value fields compatible with the registration form.
                 if (
                     ["skills", "interestedAreas", "learningGoals", "preferredDays"].includes(key)
                 ) {
                     const values = getList(value);
-                    updated[key] = Array.isArray(current[key]) ? values : values.join(", ");
+                    updated[key] = key === "preferredDays" || key === "learningGoals"
+                        ? values
+                        : values.join(", ");
                 } else {
                     updated[key] = typeof value === "string" ? value.trim() : value;
                 }
             });
 
-            // Keep commonly used alias fields in sync.
+            // Keep aliases used by existing OneService profile components.
             if (fields.some((field) => field.key === "fullName")) {
                 updated.fullName = getText(draft.fullName);
                 updated.name = updated.fullName;
@@ -486,29 +583,83 @@ export default function StudentHub() {
                 updated.learningMode = updated.preferredMode;
             }
 
-            updated.updatedAt = new Date().toISOString();
+            // Send only profile fields. Status and approval are not editable here.
+            const payload: Record<string, unknown> = {};
 
-            const serialized = JSON.stringify(updated);
-
-            STORAGE_KEYS.forEach((key) => {
-                localStorage.setItem(key, serialized);
+            fields.forEach(({ key }) => {
+                payload[key] = updated[key];
             });
 
-            setStudent(updated);
-            setDraft(updated);
-            window.dispatchEvent(new Event("oneservice-student-change"));
-            window.dispatchEvent(new Event("storage"));
+            if (fields.some((field) => field.key === "fullName")) {
+                payload.fullName = updated.fullName;
+            }
 
-            setSaveSuccess("Your student details have been saved.");
+            if (fields.some((field) => field.key === "mobile")) {
+                payload.mobile = updated.mobile;
+            }
+
+            if (fields.some((field) => field.key === "pincode")) {
+                payload.pincode = updated.pincode;
+            }
+
+            if (fields.some((field) => field.key === "institution")) {
+                payload.institution = updated.institution;
+            }
+
+            if (fields.some((field) => field.key === "course")) {
+                payload.course = updated.course;
+            }
+
+            if (fields.some((field) => field.key === "preferredMode")) {
+                payload.preferredMode = updated.preferredMode;
+            }
+
+            const response = await fetch(
+                `${API_BASE}/${encodeURIComponent(studentId)}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok || !result.success || !result.student) {
+                throw new Error(result.message || "Unable to save your student profile.");
+            }
+
+            const savedStudent = result.student as StudentApplication;
+
+            const finalStudent: StudentApplication = {
+                ...updated,
+                ...savedStudent,
+                id: savedStudent.id || studentId,
+                studentId: savedStudent.id || studentId,
+                updatedAt: savedStudent.updatedAt || new Date().toISOString(),
+            };
+
+            saveStudentLocally(finalStudent);
+            setStudent(finalStudent);
+            setDraft(finalStudent);
             setActiveEdit(null);
+            setSaveSuccess("Your student details have been saved successfully.");
         } catch (error) {
             console.error("Unable to save student details:", error);
-            setSaveError("Unable to save your changes. Please try again.");
+            setSaveError(
+                error instanceof Error
+                    ? error.message
+                    : "Unable to save your changes. Please try again."
+            );
         } finally {
             setIsSaving(false);
         }
     };
 
+    // This retains the existing local-device removal behavior.
+    // It does not delete the PostgreSQL application.
     const handleRemoveAccount = () => {
         setIsRemoving(true);
 
@@ -545,7 +696,7 @@ export default function StudentHub() {
             course: getText(student.course || student.fieldOfStudy, "Not provided"),
             currentYear: getText(student.currentYear, "Not provided"),
             graduationYear: getText(student.graduationYear, "Not provided"),
-            studentId: getText(student.studentId, "Not assigned"),
+            studentId: getText(student.educationStudentId, "Not assigned"),
             skills: getList(student.skills),
             interests: getList(student.interestedAreas),
             goals: getList(student.learningGoals),
@@ -559,7 +710,7 @@ export default function StudentHub() {
             studentProof: getText(student.studentProofFileName),
             profilePhoto: getText(student.profilePhotoName),
             status: getStatus(student.applicationStatus || student.status),
-            createdAt: formatDate(student.createdAt),
+            createdAt: formatDate(student.submittedAt || student.createdAt),
             updatedAt: formatDate(student.updatedAt),
             completion: getProfileCompletion(student),
         };
@@ -590,10 +741,19 @@ export default function StudentHub() {
                         <span className="sh-eyebrow">STUDENT PORTAL</span>
                         <h1>Your student hub starts here</h1>
                         <p>
-                            We couldn't find saved student registration details.
-                            Complete your student registration to see your education
-                            profile, skills, and learning preferences here.
+                            {isLoading
+                                ? "Loading your student registration details..."
+                                : loadError || "We couldn't find saved student registration details. Complete your student registration to see your education profile, skills, and learning preferences here."}
                         </p>
+                        {loadError && (
+                            <button
+                                type="button"
+                                className="sh-secondary-link"
+                                onClick={() => void loadStudentFromServer()}
+                            >
+                                Try again
+                            </button>
+                        )}
                         <Link to="/student-register" className="sh-primary-btn">
                             Complete Registration <ArrowRight size={18} />
                         </Link>
@@ -615,6 +775,26 @@ export default function StudentHub() {
                         <Pencil size={15} /> Edit Details
                     </button>
                 </div>
+
+                {loadError && (
+                    <div className="sh-save-notice" role="status">
+                        <CircleHelp size={18} />
+                        {loadError}
+                        <button
+                            type="button"
+                            aria-label="Retry loading"
+                            onClick={() => void loadStudentFromServer()}
+                        >
+                            Retry
+                        </button>
+                    </div>
+                )}
+
+                {isLoading && (
+                    <div className="sh-save-notice" role="status">
+                        <Clock3 size={18} /> Refreshing your student information...
+                    </div>
+                )}
 
                 <section className="sh-welcome-banner">
                     <div className="sh-welcome-content">
@@ -826,7 +1006,7 @@ export default function StudentHub() {
                             <Link to="/profile" className="sh-account-action"><UserRound size={17} /><span>Go to main profile</span><ChevronRight size={16} /></Link>
                             <button type="button" className="sh-account-action" onClick={() => navigate("/login")}><LogOut size={17} /><span>Go to Login</span><ChevronRight size={16} /></button>
                             <button type="button" className="sh-account-action sh-remove-action" onClick={() => setShowRemoveModal(true)}><Trash2 size={17} /><span>Remove Account</span><ChevronRight size={16} /></button>
-                            <p className="sh-remove-caption">Removes the student registration data saved on this device.</p>
+                            <p className="sh-remove-caption">Removes the student registration data saved in this browser only.</p>
                         </section>
                     </aside>
                 </div>
@@ -889,10 +1069,12 @@ export default function StudentHub() {
                         </div>
 
                         <footer className="sh-edit-modal-footer">
-                            <span className="sh-edit-save-hint"><ShieldCheck size={15} /> Changes are saved in this browser.</span>
+                            <span className="sh-edit-save-hint">
+                                <ShieldCheck size={15} /> Changes are saved to your student application.
+                            </span>
                             <div className="sh-modal-actions">
                                 <button type="button" className="sh-cancel-btn" onClick={closeEdit} disabled={isSaving}>Cancel</button>
-                                <button type="button" className="sh-save-btn" onClick={saveEdits} disabled={isSaving}>
+                                <button type="button" className="sh-save-btn" onClick={() => void saveEdits()} disabled={isSaving}>
                                     {isSaving ? <><Clock3 size={16} /> Saving...</> : <><Save size={16} /> Save Changes</>}
                                 </button>
                             </div>
@@ -913,7 +1095,7 @@ export default function StudentHub() {
                         <span className="sh-delete-illustration"><Trash2 size={27} /></span>
                         <span className="sh-eyebrow">ACCOUNT SETTINGS</span>
                         <h2 id="sh-remove-title">Remove student account?</h2>
-                        <p>This will delete the student registration data stored in this browser and return you to your main profile. This action cannot be undone from this page.</p>
+                        <p>This will delete the student registration data stored in this browser and return you to your main profile. It will not delete the submitted application from the admin database.</p>
                         <div className="sh-modal-actions">
                             <button type="button" className="sh-cancel-btn" onClick={() => setShowRemoveModal(false)} disabled={isRemoving}>Keep Account</button>
                             <button type="button" className="sh-confirm-delete-btn" onClick={handleRemoveAccount} disabled={isRemoving}>

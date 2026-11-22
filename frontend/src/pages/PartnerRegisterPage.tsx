@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -21,6 +21,24 @@ import {
 import "./PartnerRegisterPage.css";
 
 type Language = "en" | "te" | "hi";
+
+type LegalDocumentType = "Terms & Conditions" | "Privacy Policy";
+
+type PolicyDocument = {
+  document_id: number;
+  partner_type: string;
+  document_type: LegalDocumentType;
+  title: string;
+  content: string;
+  version_number: number;
+  published_at: string;
+};
+
+type LegalAcceptance = {
+  termsVersion: number;
+  privacyVersion: number;
+  acceptedAt: string;
+};
 
 type SellerFormData = {
   contactName: string;
@@ -57,6 +75,7 @@ type SellerFormData = {
   password: string;
   confirmPassword: string;
   terms: boolean;
+  privacyAccepted: boolean;
   verificationConsent: boolean;
   productAuthenticityConsent: boolean;
 };
@@ -233,7 +252,14 @@ const translations = {
     requiredBrandDoc: "Upload brand authorization proof or change your answer if it does not apply.",
     requiredPassword: "Password must contain at least 8 characters.",
     passwordMismatch: "Passwords do not match.",
-    requiredTerms: "Accept the Terms & Conditions and Privacy Policy.",
+    requiredTerms: "Please accept the published Terms & Conditions.",
+    requiredPrivacy: "Please accept the published Privacy Policy.",
+    policiesUnavailable: "Published seller policies are unavailable. Please try again later.",
+    loadingPolicies: "Loading the latest seller policies...",
+    readTerms: "Read Terms & Conditions",
+    readPrivacy: "Read Privacy Policy",
+    policyVersion: "Version",
+    close: "Close",
     requiredVerification: "Provide consent for business verification.",
     requiredAuthenticity: "Confirm the product authenticity declaration.",
     submissionError: "Unable to submit your application. Please try again.",
@@ -422,7 +448,14 @@ const translations = {
     requiredBrandDoc: "బ్రాండ్ అధికారం పత్రాన్ని అప్‌లోడ్ చేయండి లేదా వర్తించదని సమాధానం మార్చండి.",
     requiredPassword: "పాస్‌వర్డ్ కనీసం 8 అక్షరాలు ఉండాలి.",
     passwordMismatch: "పాస్‌వర్డ్‌లు సరిపోలడం లేదు.",
-    requiredTerms: "నిబంధనలు మరియు గోప్యతా విధానాన్ని అంగీకరించండి.",
+    requiredTerms: "ప్రచురించిన నిబంధనలను అంగీకరించండి.",
+    requiredPrivacy: "ప్రచురించిన గోప్యతా విధానాన్ని అంగీకరించండి.",
+    policiesUnavailable: "ప్రచురించిన విక్రేత విధానాలు అందుబాటులో లేవు. తర్వాత మళ్లీ ప్రయత్నించండి.",
+    loadingPolicies: "తాజా విక్రేత విధానాలు లోడ్ అవుతున్నాయి...",
+    readTerms: "నిబంధనలు చదవండి",
+    readPrivacy: "గోప్యతా విధానం చదవండి",
+    policyVersion: "వెర్షన్",
+    close: "మూసివేయండి",
     requiredVerification: "వ్యాపార ధృవీకరణకు సమ్మతి ఇవ్వండి.",
     requiredAuthenticity: "ఉత్పత్తుల ప్రామాణికత ప్రకటనను అంగీకరించండి.",
     submissionError: "దరఖాస్తును సమర్పించలేకపోయాం. మళ్లీ ప్రయత్నించండి.",
@@ -611,7 +644,14 @@ const translations = {
     requiredBrandDoc: "ब्रांड प्राधिकरण प्रमाण अपलोड करें या लागू न होने पर उत्तर बदलें।",
     requiredPassword: "पासवर्ड कम से कम 8 अक्षरों का होना चाहिए।",
     passwordMismatch: "पासवर्ड मेल नहीं खाते।",
-    requiredTerms: "नियम और गोपनीयता नीति स्वीकार करें।",
+    requiredTerms: "प्रकाशित नियम और शर्तें स्वीकार करें।",
+    requiredPrivacy: "प्रकाशित गोपनीयता नीति स्वीकार करें।",
+    policiesUnavailable: "प्रकाशित विक्रेता नीतियाँ उपलब्ध नहीं हैं। कृपया बाद में प्रयास करें।",
+    loadingPolicies: "नवीनतम विक्रेता नीतियाँ लोड हो रही हैं...",
+    readTerms: "नियम और शर्तें पढ़ें",
+    readPrivacy: "गोपनीयता नीति पढ़ें",
+    policyVersion: "संस्करण",
+    close: "बंद करें",
     requiredVerification: "व्यवसाय सत्यापन की सहमति दें।",
     requiredAuthenticity: "उत्पाद की प्रामाणिकता की पुष्टि करें।",
     submissionError: "आवेदन जमा नहीं हो सका। फिर से प्रयास करें।",
@@ -666,6 +706,7 @@ const initialFormData: SellerFormData = {
   password: "",
   confirmPassword: "",
   terms: false,
+  privacyAccepted: false,
   verificationConsent: false,
   productAuthenticityConsent: false,
 };
@@ -702,7 +743,6 @@ function getSellerApplications(): SellerApplication[] {
       }
     }
 
-    // Migrate the previous single-application format.
     const oldApplication = localStorage.getItem(
       SELLER_APPLICATION_KEY
     );
@@ -730,7 +770,6 @@ function saveSellerApplications(
     JSON.stringify(applications)
   );
 
-  // Keep the latest application available for existing profile components.
   const latestApplication = applications[applications.length - 1];
 
   if (latestApplication) {
@@ -752,11 +791,115 @@ function PartnerRegisterPage() {
 
   const [formData, setFormData] =
     useState<SellerFormData>(initialFormData);
+
   const [currentStep, setCurrentStep] = useState(0);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [policyDocuments, setPolicyDocuments] =
+    useState<PolicyDocument[]>([]);
+  const [policiesReady, setPoliciesReady] = useState(false);
+  const [policyError, setPolicyError] = useState("");
+  const [legalAcceptance, setLegalAcceptance] =
+    useState<LegalAcceptance | null>(null);
+  const [activePolicy, setActivePolicy] =
+    useState<LegalDocumentType | null>(null);
+
+  const termsDocument = policyDocuments.find(
+    (document) => document.document_type === "Terms & Conditions"
+  );
+
+  const privacyDocument = policyDocuments.find(
+    (document) => document.document_type === "Privacy Policy"
+  );
+
+  // Load the latest published Marketplace Seller policies.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadPolicies = async () => {
+      try {
+        setPoliciesReady(false);
+        setPolicyError("");
+
+        const response = await fetch(
+          "http://localhost:5000/api/legal-documents/published/Marketplace%20Seller"
+        );
+
+        const result = await response.json();
+
+        if (!response.ok || result.success === false) {
+          throw new Error(
+            result.message || "Unable to load published seller policies."
+          );
+        }
+
+        const documents = Array.isArray(result.documents)
+          ? result.documents
+          : Array.isArray(result.data)
+            ? result.data
+            : [];
+
+        const publishedDocuments: PolicyDocument[] = documents.map(
+          (item: any) => ({
+            document_id: Number(item.document_id ?? item.id ?? 0),
+            partner_type: item.partner_type ?? "Marketplace Seller",
+            document_type: item.document_type,
+            title: item.title ?? item.document_type,
+            content: item.content ?? "",
+            version_number: Number(
+              item.version_number ?? item.current_version ?? 0
+            ),
+            published_at: item.published_at ?? "",
+          })
+        );
+
+        const hasTerms = publishedDocuments.some(
+          (document) =>
+            document.document_type === "Terms & Conditions" &&
+            document.version_number > 0 &&
+            document.content.trim().length > 0
+        );
+
+        const hasPrivacy = publishedDocuments.some(
+          (document) =>
+            document.document_type === "Privacy Policy" &&
+            document.version_number > 0 &&
+            document.content.trim().length > 0
+        );
+
+        if (!hasTerms || !hasPrivacy) {
+          throw new Error(
+            "Both Marketplace Seller Terms & Conditions and Privacy Policy must be published."
+          );
+        }
+
+        if (!cancelled) {
+          setPolicyDocuments(publishedDocuments);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setPolicyError(
+            err instanceof Error
+              ? err.message
+              : t.policiesUnavailable
+          );
+        }
+      } finally {
+        if (!cancelled) {
+          setPoliciesReady(true);
+        }
+      }
+    };
+
+    loadPolicies();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const handleTextChange = (
     event: ChangeEvent<
@@ -793,9 +936,47 @@ function PartnerRegisterPage() {
     setError("");
   };
 
-  const handleCheckboxChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleCheckboxChange = (
+    event: ChangeEvent<HTMLInputElement>
+  ) => {
     const { name, checked } = event.target;
     setFormData((previous) => ({ ...previous, [name]: checked }));
+    setError("");
+  };
+
+  // Each legal policy has its own acceptance checkbox.
+  // The version snapshot is recorded only after both have been accepted.
+  const handlePolicyCheckbox = (
+    documentType: LegalDocumentType,
+    checked: boolean
+  ) => {
+    if (!policiesReady || !termsDocument || !privacyDocument) {
+      setError(policyError || t.policiesUnavailable);
+      return;
+    }
+
+    const otherPolicyAccepted =
+      documentType === "Terms & Conditions"
+        ? formData.privacyAccepted
+        : formData.terms;
+
+    setFormData((previous) => ({
+      ...previous,
+      ...(documentType === "Terms & Conditions"
+        ? { terms: checked }
+        : { privacyAccepted: checked }),
+    }));
+
+    if (!checked || !otherPolicyAccepted) {
+      setLegalAcceptance(null);
+    } else {
+      setLegalAcceptance({
+        termsVersion: termsDocument.version_number,
+        privacyVersion: privacyDocument.version_number,
+        acceptedAt: new Date().toISOString(),
+      });
+    }
+
     setError("");
   };
 
@@ -824,6 +1005,7 @@ function PartnerRegisterPage() {
         if (!formData.sellerType) return t.requiredSeller;
         if (!formData.businessName.trim()) return t.requiredBusiness;
         if (!formData.businessType) return t.requiredLegalType;
+
         if (
           formData.yearEstablished &&
           (!/^\d{4}$/.test(formData.yearEstablished) ||
@@ -832,12 +1014,14 @@ function PartnerRegisterPage() {
         ) {
           return t.invalidYear;
         }
+
         if (
           formData.website &&
           !/^https?:\/\/.+\..+/i.test(formData.website.trim())
         ) {
           return t.invalidWebsite;
         }
+
         return "";
 
       case 2:
@@ -846,12 +1030,14 @@ function PartnerRegisterPage() {
         if (!formData.products.trim()) return t.requiredProducts;
         if (!formData.productCondition) return t.requiredCondition;
         if (!formData.authorizedSeller) return t.requiredAuthorization;
+
         if (
           formData.authorizedSeller === "yes" &&
           !formData.brandAuthorizationDocument
         ) {
           return t.requiredBrandDoc;
         }
+
         if (!formData.productCatalogue) return t.requiredCatalogue;
         return "";
 
@@ -888,23 +1074,42 @@ function PartnerRegisterPage() {
         ) {
           return t.requiredRegistration;
         }
+
         if (formData.gstNumber.trim() && !formData.gstDocument) {
           return t.requiredGSTDoc;
         }
+
         return "";
 
       case 5:
         if (formData.password.length < 8) return t.requiredPassword;
+
         if (
           !formData.confirmPassword ||
           formData.password !== formData.confirmPassword
         ) {
           return t.passwordMismatch;
         }
+
+        if (
+          !policiesReady ||
+          !termsDocument ||
+          !privacyDocument ||
+          policyError
+        ) {
+          return policyError || t.policiesUnavailable;
+        }
+
         if (!formData.terms) return t.requiredTerms;
-        if (!formData.verificationConsent) return t.requiredVerification;
+        if (!formData.privacyAccepted) return t.requiredPrivacy;
+        if (!legalAcceptance) return t.requiredTerms;
+
+        if (!formData.verificationConsent)
+          return t.requiredVerification;
+
         if (!formData.productAuthenticityConsent)
           return t.requiredAuthenticity;
+
         return "";
 
       default:
@@ -992,7 +1197,8 @@ function PartnerRegisterPage() {
         inventory: formData.inventory,
         returnPolicy: formData.returnPolicy,
 
-        // STEP 5 — Document submission indicators
+        // STEP 5 — Document submission indicators.
+        // Actual file contents are not uploaded by this localStorage flow.
         hasBusinessRegistration: Boolean(
           formData.businessRegistration
         ),
@@ -1004,8 +1210,7 @@ function PartnerRegisterPage() {
         ),
         hasProductCatalogue: Boolean(formData.productCatalogue),
 
-        // Document names for admin reference.
-        // These are metadata only, not the actual uploaded files.
+        // File names are metadata only.
         businessRegistrationFileName:
           formData.businessRegistration?.name ?? "",
         panDocumentFileName:
@@ -1021,12 +1226,23 @@ function PartnerRegisterPage() {
 
         // STEP 6 — Consents
         termsAccepted: formData.terms,
+        privacyAccepted: formData.privacyAccepted,
         verificationConsent: formData.verificationConsent,
         productAuthenticityConsent:
           formData.productAuthenticityConsent,
+
+        // Exact published policy versions accepted by the seller.
+        legalAcceptance: legalAcceptance
+          ? {
+              termsVersion: legalAcceptance.termsVersion,
+              privacyVersion: legalAcceptance.privacyVersion,
+              termsTitle: termsDocument?.title ?? "",
+              privacyTitle: privacyDocument?.title ?? "",
+              acceptedAt: legalAcceptance.acceptedAt,
+            }
+          : null,
       };
 
-      // Prevent accidental duplicate IDs.
       const updatedApplications = [
         ...existingApplications.filter(
           (item) => item.id !== application.id
@@ -1034,10 +1250,8 @@ function PartnerRegisterPage() {
         application,
       ];
 
-      // Save every seller application, not just the latest one.
       saveSellerApplications(updatedApplications);
 
-      // Existing workspace role compatibility.
       localStorage.setItem(
         "oneservice_workspace_role",
         "seller"
@@ -1058,11 +1272,22 @@ function PartnerRegisterPage() {
 
   const categories = t.categoriesList;
 
+  const selectedPolicy =
+    activePolicy === "Terms & Conditions"
+      ? termsDocument
+      : activePolicy === "Privacy Policy"
+        ? privacyDocument
+        : null;
+
   return (
     <main className="partner-register-page">
       <section className="partner-wizard">
         <header className="partner-wizard-header">
-          <Link to="/" className="partner-brand" aria-label="NeedOneService home">
+          <Link
+            to="/"
+            className="partner-brand"
+            aria-label="NeedOneService home"
+          >
             {/* Existing brand mark and text can be restored here if required. */}
           </Link>
 
@@ -1142,8 +1367,9 @@ function PartnerRegisterPage() {
             {t.steps.map((step, index) => (
               <div
                 key={step[0]}
-                className={`partner-step-indicator ${index === currentStep ? "current" : ""
-                  } ${index < currentStep ? "completed" : ""}`}
+                className={`partner-step-indicator ${
+                  index === currentStep ? "current" : ""
+                } ${index < currentStep ? "completed" : ""}`}
               >
                 <span>
                   {index < currentStep ? (
@@ -1364,8 +1590,9 @@ function PartnerRegisterPage() {
                             key={category}
                             type="button"
                             aria-pressed={selected}
-                            className={`partner-service-chip ${selected ? "selected" : ""
-                              }`}
+                            className={`partner-service-chip ${
+                              selected ? "selected" : ""
+                            }`}
                             onClick={() => toggleCategory(category)}
                           >
                             {selected && <Check size={13} />}
@@ -1594,10 +1821,11 @@ function PartnerRegisterPage() {
                   </Field>
 
                   <FileUpload
-                    label={`${t.registration} (${businessRegistrationRequired(formData.businessType)
+                    label={`${t.registration} (${
+                      businessRegistrationRequired(formData.businessType)
                         ? t.required
                         : t.conditional
-                      })`}
+                    })`}
                     file={formData.businessRegistration}
                     onChange={(event) =>
                       handleFileChange(event, "businessRegistration")
@@ -1615,7 +1843,11 @@ function PartnerRegisterPage() {
                   />
 
                   <FileUpload
-                    label={`${t.gstDoc} (${formData.gstNumber.trim() ? t.required : t.conditional})`}
+                    label={`${t.gstDoc} (${
+                      formData.gstNumber.trim()
+                        ? t.required
+                        : t.conditional
+                    })`}
                     file={formData.gstDocument}
                     onChange={(event) =>
                       handleFileChange(event, "gstDocument")
@@ -1723,18 +1955,81 @@ function PartnerRegisterPage() {
                   </div>
 
                   <div className="partner-consent-section partner-field-full">
-                    <label className="partner-check-row">
-                      <input
-                        type="checkbox"
-                        name="terms"
-                        checked={formData.terms}
-                        onChange={handleCheckboxChange}
-                      />
-                      <span>
-                        {t.terms} <Link to="/terms">{t.termsLink}</Link> and{" "}
-                        <Link to="/privacy">{t.privacy}</Link>.
-                      </span>
-                    </label>
+                    {!policiesReady && (
+                      <p>{t.loadingPolicies}</p>
+                    )}
+
+                    {policyError && (
+                      <div className="partner-form-error" role="alert">
+                        {policyError}
+                      </div>
+                    )}
+
+                    {policiesReady && !policyError && (
+                      <>
+                        <div className="partner-policy-links">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActivePolicy("Terms & Conditions")
+                            }
+                          >
+                            <FileText size={15} />
+                            {t.readTerms}
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActivePolicy("Privacy Policy")
+                            }
+                          >
+                            <FileText size={15} />
+                            {t.readPrivacy}
+                          </button>
+                        </div>
+
+                        <label className="partner-check-row">
+                          <input
+                            type="checkbox"
+                            checked={formData.terms}
+                            onChange={(event) =>
+                              handlePolicyCheckbox(
+                                "Terms & Conditions",
+                                event.target.checked
+                              )
+                            }
+                          />
+                          <span>
+                            {t.terms}{" "}
+                            <strong>{t.termsLink}</strong>
+                            {termsDocument &&
+                              ` (${t.policyVersion} ${termsDocument.version_number})`}
+                            .
+                          </span>
+                        </label>
+
+                        <label className="partner-check-row">
+                          <input
+                            type="checkbox"
+                            checked={formData.privacyAccepted}
+                            onChange={(event) =>
+                              handlePolicyCheckbox(
+                                "Privacy Policy",
+                                event.target.checked
+                              )
+                            }
+                          />
+                          <span>
+                            {t.terms}{" "}
+                            <strong>{t.privacy}</strong>
+                            {privacyDocument &&
+                              ` (${t.policyVersion} ${privacyDocument.version_number})`}
+                            .
+                          </span>
+                        </label>
+                      </>
+                    )}
 
                     <label className="partner-check-row">
                       <input
@@ -1798,6 +2093,69 @@ function PartnerRegisterPage() {
             </footer>
           </form>
         </div>
+
+        {activePolicy && (
+          <div
+            className="partner-policy-overlay"
+            role="presentation"
+            onClick={() => setActivePolicy(null)}
+          >
+            <section
+              className="partner-policy-modal"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="partner-policy-title"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <header className="partner-policy-modal-header">
+                <div>
+                  <span>MARKETPLACE SELLER LEGAL DOCUMENT</span>
+                  <h2 id="partner-policy-title">
+                    {selectedPolicy?.title ?? activePolicy}
+                  </h2>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActivePolicy(null)}
+                  aria-label={t.close}
+                >
+                  ×
+                </button>
+              </header>
+
+              <div className="partner-policy-modal-content">
+                {selectedPolicy ? (
+                  <>
+                    <p className="partner-policy-version">
+                      {t.policyVersion}{" "}
+                      {selectedPolicy.version_number}
+                      {selectedPolicy.published_at &&
+                        ` · Published ${new Date(
+                          selectedPolicy.published_at
+                        ).toLocaleDateString()}`}
+                    </p>
+
+                    <div className="partner-policy-document">
+                      {selectedPolicy.content}
+                    </div>
+                  </>
+                ) : (
+                  <p>{t.policiesUnavailable}</p>
+                )}
+              </div>
+
+              <footer className="partner-policy-modal-footer">
+                <button
+                  type="button"
+                  onClick={() => setActivePolicy(null)}
+                >
+                  {t.close}
+                </button>
+              </footer>
+            </section>
+          </div>
+        )}
 
         <p className="partner-wizard-bottom-note">
           {t.help} <Link to="/contact">{t.contactUs}</Link>

@@ -3,7 +3,6 @@
    NEEDONESERVICE — STUDENT REGISTRATION WIZARD
    File: StudentRegisterPage.css
    Theme: Blue + White | Responsive | Multilingual
-   Compatible with StudentRegisterPage.tsx
 ========================================================= */
 
 .partner-register-page {
@@ -57,7 +56,9 @@
   color: var(--student-primary-dark);
 }
 
-/* Main layout */
+/* =========================================================
+   MAIN LAYOUT
+========================================================= */
 
 .partner-wizard {
   width: 100%;
@@ -65,52 +66,21 @@
   margin: 0 auto;
 }
 
+/* Header */
+
 .partner-wizard-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 24px;
-  margin-bottom: 48px;
+  width: 100%;
+  margin-bottom: 30px;
 }
 
-.partner-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  color: var(--student-text) !important;
-}
+/* Hide brand on student registration header */
 
-.partner-brand-mark {
-  display: grid;
-  flex: 0 0 46px;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  color: white;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
-  border-radius: 14px;
-  box-shadow: 0 7px 18px rgb(37 99 235 / 20%);
-}
-
-.partner-brand > span:last-child {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.partner-brand strong {
-  font-size: 19px;
-  font-weight: 800;
-  letter-spacing: -0.6px;
-}
-
-.partner-brand small {
-  color: var(--student-muted);
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 1.05px;
-  line-height: 1.5;
+.partner-register-page .partner-wizard-header .partner-brand {
+  display: none !important;
 }
 
 .partner-header-actions {
@@ -118,6 +88,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 24px;
+  width: 100%;
 }
 
 .partner-language-picker {
@@ -151,17 +122,22 @@
 }
 
 .partner-login-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: var(--student-muted);
   font-size: 13px;
   white-space: nowrap;
 }
 
 .partner-login-note a {
-  margin-left: 5px;
+  margin-left: 2px;
   font-weight: 800;
 }
 
-/* Intro */
+/* =========================================================
+   INTRO SECTION
+========================================================= */
 
 .partner-wizard-intro {
   display: flex;
@@ -221,9 +197,12 @@
   margin-top: 1px;
 }
 
-/* Main wizard card */
+/* =========================================================
+   MAIN WIZARD CARD
+========================================================= */
 
 .partner-wizard-card {
+  width: 100%;
   overflow: hidden;
   background: var(--student-surface);
   border: 1px solid #e5eaf3;
@@ -232,6 +211,8 @@
     0 16px 45px rgb(30 64 175 / 5%),
     0 2px 8px rgb(15 23 42 / 3%);
 }
+
+/* Progress header */
 
 .partner-progress-header {
   display: flex;
@@ -293,27 +274,38 @@
   transition: width 300ms ease;
 }
 
-/* Step navigation */
+/* =========================================================
+   STEP NAVIGATION
+========================================================= */
 
 .partner-step-navigation {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  align-items: start;
+  gap: 8px;
+  min-height: 102px;
   padding: 25px 34px 27px;
+  overflow: visible;
   border-bottom: 1px solid #edf1f7;
 }
 
 .partner-step-indicator {
+  position: relative;
   display: flex;
+  width: 100%;
   min-width: 0;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-start;
   gap: 9px;
-  padding: 0;
+  padding: 0 2px;
   color: #94a3b8;
   background: transparent;
   border: 0;
+  box-shadow: none;
   cursor: default;
+  text-align: center;
+  white-space: normal;
 }
 
 .partner-step-indicator:disabled {
@@ -324,40 +316,72 @@
   cursor: pointer;
 }
 
+/* Numbered circles */
+
 .partner-step-icon {
-  display: grid;
-  width: 39px;
-  height: 39px;
+  position: relative;
+  display: grid !important;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
   place-items: center;
+  padding: 0;
   color: #64748b;
   background: #f1f5f9;
   border: 1px solid #e2e8f0;
   border-radius: 50%;
   font-size: 11px;
   font-weight: 800;
-  transition: background 180ms ease, color 180ms ease;
+  line-height: 1;
+  transition:
+    background 180ms ease,
+    color 180ms ease,
+    border-color 180ms ease;
 }
 
+/* Active step */
+
 .partner-step-indicator.active .partner-step-icon {
-  color: white;
+  color: #fff;
   background: var(--student-primary);
   border-color: var(--student-primary);
   box-shadow: 0 4px 12px rgb(37 99 235 / 22%);
 }
 
+/* Completed steps */
+
 .partner-step-indicator.completed .partner-step-icon {
-  color: var(--student-primary);
+  color: #1d4ed8;
   background: #dbeafe;
   border-color: #bfdbfe;
 }
 
+/* Plain step labels */
+
 .partner-step-label {
+  display: block;
+  position: static;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: 0 2px;
+  overflow: visible;
   color: #64748b;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
   font-size: 10px;
-  font-weight: 700;
+  font-weight: 600;
+  line-height: 1.5;
   text-align: center;
-  overflow-wrap: anywhere;
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: normal;
+  text-overflow: clip;
 }
 
 .partner-step-indicator.active .partner-step-label,
@@ -365,7 +389,9 @@
   color: var(--student-primary);
 }
 
-/* Form section */
+/* =========================================================
+   FORM CONTENT
+========================================================= */
 
 .partner-form-content {
   padding: 30px 34px 32px;
@@ -411,6 +437,8 @@
   line-height: 1.8;
 }
 
+/* Form grid */
+
 .partner-form-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -451,7 +479,9 @@
   outline: none;
   font-size: 12px;
   font-weight: 500;
-  transition: border-color 180ms ease, box-shadow 180ms ease;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease;
 }
 
 .partner-field input::placeholder,
@@ -484,6 +514,14 @@
   color-scheme: light;
 }
 
+.partner-field-hint {
+  display: block;
+  margin: 6px 0 12px;
+  color: var(--student-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+
 .partner-form-error {
   display: block;
   color: var(--student-danger);
@@ -492,7 +530,9 @@
   line-height: 1.6;
 }
 
-/* Password fields */
+/* =========================================================
+   PASSWORD FIELDS
+========================================================= */
 
 .partner-input-wrap {
   position: relative;
@@ -525,7 +565,9 @@
   background: #eff6ff;
 }
 
-/* Multi-select chips */
+/* =========================================================
+   MULTI-SELECT CHIPS
+========================================================= */
 
 .partner-field-label {
   display: block;
@@ -556,7 +598,10 @@
   font-size: 11px;
   font-weight: 600;
   line-height: 1.5;
-  transition: color 150ms ease, background 150ms ease, border-color 150ms ease;
+  transition:
+    color 150ms ease,
+    background 150ms ease,
+    border-color 150ms ease;
 }
 
 .partner-choice-chip:hover {
@@ -580,7 +625,9 @@
   outline-offset: 3px;
 }
 
-/* File upload */
+/* =========================================================
+   FILE UPLOAD
+========================================================= */
 
 .partner-file-input {
   position: absolute;
@@ -606,7 +653,9 @@
   border-radius: 12px;
   text-align: center;
   cursor: pointer;
-  transition: background 180ms ease, border-color 180ms ease;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease;
 }
 
 .partner-upload-box:hover {
@@ -634,7 +683,9 @@
   outline-offset: 3px;
 }
 
-/* Consent and security */
+/* =========================================================
+   CONSENT AND SECURITY
+========================================================= */
 
 .partner-consent-list {
   display: flex;
@@ -684,7 +735,9 @@
   grid-column: 1 / -1;
 }
 
-/* Footer navigation */
+/* =========================================================
+   FORM FOOTER AND NAVIGATION BUTTONS
+========================================================= */
 
 .partner-form-footer {
   display: flex;
@@ -695,6 +748,8 @@
   padding-top: 24px;
   border-top: 1px solid #edf1f7;
 }
+
+/* Back button */
 
 .partner-back-button,
 .partner-submit-button {
@@ -708,7 +763,11 @@
   cursor: pointer;
   font-size: 12px;
   font-weight: 800;
-  transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  transition:
+    transform 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .partner-back-button {
@@ -730,19 +789,73 @@
   opacity: 0.7;
 }
 
+/* =========================================================
+   SUBMIT BUTTON — PRIMARY ACTION
+========================================================= */
+
 .partner-submit-button {
+  position: relative;
+  min-width: 145px;
+  min-height: 48px;
+  padding: 13px 24px;
   color: #fff !important;
-  background: var(--student-primary);
-  border: 1px solid var(--student-primary);
-  box-shadow: 0 5px 13px rgb(37 99 235 / 15%);
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  border: 1px solid #2563eb;
+  border-radius: 10px;
+  box-shadow: 0 5px 13px rgb(37 99 235 / 18%);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1px;
+  line-height: 1.4;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
 }
 
-.partner-submit-button:hover {
-  background: var(--student-primary-dark);
-  border-color: var(--student-primary-dark);
-  box-shadow: 0 7px 17px rgb(37 99 235 / 22%);
-  transform: translateY(-1px);
+.partner-submit-button:hover:not(:disabled) {
+  color: #fff !important;
+  background: linear-gradient(135deg, #1d4ed8, #2563eb);
+  border-color: #1d4ed8;
+  box-shadow: 0 7px 18px rgb(37 99 235 / 25%);
+  transform: translateY(-2px);
 }
+
+.partner-submit-button:active:not(:disabled) {
+  box-shadow: 0 3px 8px rgb(37 99 235 / 18%);
+  transform: translateY(0);
+}
+
+.partner-submit-button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 30%);
+  outline-offset: 4px;
+}
+
+/* Disabled / submitting state */
+
+.partner-submit-button:disabled,
+.partner-submit-button[aria-disabled="true"] {
+  color: #fff !important;
+  background: #93b4f5;
+  border-color: #93b4f5;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.8;
+  transform: none;
+}
+
+/* Keep button icons aligned */
+
+.partner-submit-button svg,
+.partner-back-button svg {
+  flex-shrink: 0;
+}
+
+/* Footer hint */
 
 .partner-footer-hint {
   display: inline-flex;
@@ -772,7 +885,9 @@
   font-weight: 800;
 }
 
-/* Success screen */
+/* =========================================================
+   SUCCESS SCREEN
+========================================================= */
 
 .partner-success-card {
   max-width: 760px;
@@ -861,7 +976,9 @@
   margin-top: 26px;
 }
 
-/* Responsive layouts */
+/* =========================================================
+   RESPONSIVE — TABLETS
+========================================================= */
 
 @media (max-width: 900px) {
   .partner-register-page {
@@ -869,7 +986,7 @@
   }
 
   .partner-wizard-header {
-    margin-bottom: 36px;
+    margin-bottom: 30px;
   }
 
   .partner-wizard-intro {
@@ -883,9 +1000,9 @@
   }
 
   .partner-step-navigation {
-    gap: 6px;
-    padding-right: 22px;
-    padding-left: 22px;
+    gap: 5px;
+    padding-right: 20px;
+    padding-left: 20px;
   }
 
   .partner-step-label {
@@ -908,6 +1025,10 @@
   }
 }
 
+/* =========================================================
+   RESPONSIVE — MOBILE
+========================================================= */
+
 @media (max-width: 640px) {
   .partner-register-page {
     padding: 17px 12px 28px;
@@ -917,24 +1038,7 @@
     align-items: flex-start;
     flex-wrap: wrap;
     gap: 16px;
-    margin-bottom: 28px;
-  }
-
-  .partner-brand-mark {
-    flex-basis: 40px;
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-  }
-
-  .partner-brand strong {
-    font-size: 17px;
-  }
-
-  .partner-brand small {
-    max-width: 210px;
-    font-size: 8px;
-    letter-spacing: 0.7px;
+    margin-bottom: 25px;
   }
 
   .partner-header-actions {
@@ -1000,17 +1104,20 @@
 
   .partner-step-navigation {
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 4px;
-    padding: 20px 10px;
+    gap: 3px;
+    padding: 20px 8px 22px;
   }
 
   .partner-step-icon {
+    flex-basis: 31px;
     width: 31px;
     height: 31px;
-    font-size: 10px;
+    min-width: 31px;
+    font-size: 9px;
   }
 
   .partner-step-label {
+    padding: 0 1px;
     font-size: 8px;
     line-height: 1.4;
   }
@@ -1073,6 +1180,8 @@
     padding: 15px 12px;
   }
 
+  /* Mobile footer buttons */
+
   .partner-form-footer {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1104,6 +1213,7 @@
   .partner-form-footer > .partner-submit-button {
     grid-column: 2;
     grid-row: 2;
+    width: 100%;
   }
 
   .partner-success-card {
@@ -1133,16 +1243,22 @@
   }
 }
 
+/* =========================================================
+   RESPONSIVE — SMALL MOBILE
+========================================================= */
+
 @media (max-width: 360px) {
   .partner-step-navigation {
-    padding-right: 6px;
-    padding-left: 6px;
+    gap: 1px;
+    padding-right: 5px;
+    padding-left: 5px;
   }
 
   .partner-step-icon {
+    flex-basis: 27px;
     width: 27px;
     height: 27px;
-    font-size: 9px;
+    min-width: 27px;
   }
 
   .partner-step-label {
@@ -1167,7 +1283,9 @@
   }
 }
 
-/* Reduced-motion accessibility */
+/* =========================================================
+   REDUCED MOTION ACCESSIBILITY
+========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   .partner-register-page *,
@@ -1180,307 +1298,367 @@
   }
 }
 
-.partner-field-hint {
-    display: block;
-    margin: 6px 0 12px;
-    color: #64748b;
-    font-size: 0.875rem;
-    line-height: 1.6;
-}
+/* =========================================================
+   END OF STUDENT REGISTRATION STYLES
+========================================================= */
+
 
 
 /* =========================================================
-   FIX: STUDENT WIZARD STEP NAVIGATION
-   Uses the actual classes from StudentRegisterPage.css
+   FIX: ACCOUNT & CONSENT SECTION + BOTTOM ACTION FOOTER
 ========================================================= */
 
-.partner-register-page .partner-wizard-card {
-  overflow: hidden;
-}
-
-.partner-register-page .partner-step-navigation {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  align-items: start;
-  gap: 8px;
-  padding: 24px 34px 28px;
-  overflow: visible;
-  min-height: 102px;
-}
-
-.partner-register-page .partner-step-indicator {
-  position: relative;
+/* Consent container */
+.partner-register-page .partner-consent-list {
   display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 22px 18px;
+  background: #fbfcff;
+  border: 1px solid #e2e8f0;
+  border-radius: 13px;
+}
+
+/* Individual consent row */
+.partner-register-page .partner-policy-consent-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
   width: 100%;
   min-width: 0;
-  height: auto;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 9px;
-  padding: 0 2px;
-  overflow: visible;
-  text-align: center;
-  white-space: normal;
 }
 
-/* One consistent circle for each step */
-.partner-register-page .partner-step-icon {
-  position: relative;
+/* Consent checkbox and text */
+.partner-register-page .partner-policy-consent-row .partner-consent {
   display: flex;
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
+  flex: 0 1 auto;
+  align-items: flex-start;
+  gap: 11px;
+  min-width: 0;
+  margin: 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.8;
+}
+
+/* Checkbox */
+.partner-register-page .partner-policy-consent-row input[type="checkbox"] {
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin: 3px 0 0;
+  accent-color: #2563eb;
+  cursor: pointer;
+}
+
+/* Consent text */
+.partner-register-page .partner-policy-consent-row .partner-consent span {
+  min-width: 0;
+}
+
+/* Required asterisk */
+.partner-register-page .partner-policy-consent-row .partner-required {
+  color: #dc2626;
+}
+
+/* View policy button */
+.partner-register-page .partner-policy-view-button {
+  display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  overflow: visible;
-  border: 1px solid #e2e8f0;
-  border-radius: 50%;
-  box-sizing: border-box;
-  line-height: 1;
-}
-
-/* Active step */
-.partner-register-page .partner-step-indicator.active .partner-step-icon {
-  color: #fff;
-  background: #2563eb;
-  border-color: #2563eb;
-  box-shadow: 0 4px 12px rgb(37 99 235 / 22%);
-}
-
-/* Completed steps */
-.partner-register-page .partner-step-indicator.completed .partner-step-icon {
-  color: #1d4ed8;
-  background: #dbeafe;
-  border-color: #bfdbfe;
-}
-
-/* Keep the full step label visible */
-.partner-register-page .partner-step-label {
-  display: block;
-  position: static;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  height: auto;
+  min-height: 30px;
   margin: 0;
-  padding: 0 2px;
-  overflow: visible;
-  color: #64748b;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.5;
-  text-align: center;
-  white-space: normal;
-  overflow-wrap: break-word;
-  word-break: normal;
-  text-overflow: clip;
-}
-
-.partner-register-page
-  .partner-step-indicator.active
-  .partner-step-label,
-.partner-register-page
-  .partner-step-indicator.completed
-  .partner-step-label {
+  padding: 5px 13px;
   color: #2563eb;
-}
-
-/* Responsive adjustment */
-@media (max-width: 900px) {
-  .partner-register-page .partner-step-navigation {
-    gap: 5px;
-    padding-right: 20px;
-    padding-left: 20px;
-  }
-
-  .partner-register-page .partner-step-label {
-    font-size: 9px;
-  }
-}
-
-@media (max-width: 640px) {
-  .partner-register-page .partner-step-navigation {
-    gap: 3px;
-    padding: 20px 8px 22px;
-  }
-
-  .partner-register-page .partner-step-icon {
-    flex-basis: 31px;
-    width: 31px;
-    height: 31px;
-    min-width: 31px;
-    font-size: 9px;
-  }
-
-  .partner-register-page .partner-step-label {
-    padding: 0 1px;
-    font-size: 8px;
-    line-height: 1.4;
-  }
-}
-
-@media (max-width: 360px) {
-  .partner-register-page .partner-step-navigation {
-    gap: 1px;
-    padding-right: 5px;
-    padding-left: 5px;
-  }
-
-  .partner-register-page .partner-step-icon {
-    flex-basis: 27px;
-    width: 27px;
-    height: 27px;
-    min-width: 27px;
-  }
-
-  .partner-register-page .partner-step-label {
-    font-size: 7px;
-  }
-}
-
-
-/* Step navigation: keep numbered circles, remove label backgrounds */
-
-.partner-register-page .partner-step-navigation {
-  display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  align-items: start;
-  gap: 8px;
-}
-
-.partner-register-page .partner-step-indicator {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 9px;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
-}
-
-/* Keep the numbered circles */
-.partner-register-page .partner-step-icon {
-  display: grid !important;
-  flex: 0 0 38px;
-  width: 38px;
-  height: 38px;
-  min-width: 38px;
-  place-items: center;
-  color: #64748b;
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
-  border-radius: 50%;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 7px;
+  font-family: inherit;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
+  line-height: 1.4;
+  cursor: pointer;
+  transition: all 180ms ease;
 }
 
-/* Active number circle */
-.partner-register-page
-  .partner-step-indicator.active
-  .partner-step-icon {
+.partner-register-page .partner-policy-view-button:hover:not(:disabled) {
   color: #fff;
   background: #2563eb;
   border-color: #2563eb;
-  box-shadow: 0 4px 12px rgb(37 99 235 / 22%);
 }
 
-/* Completed number circles */
-.partner-register-page
-  .partner-step-indicator.completed
-  .partner-step-icon {
-  color: #1d4ed8;
-  background: #dbeafe;
-  border-color: #bfdbfe;
+.partner-register-page .partner-policy-view-button:focus-visible {
+  outline: 3px solid rgb(37 99 235 / 22%);
+  outline-offset: 3px;
 }
 
-/* Plain text labels — no grey circle or background */
-.partner-register-page .partner-step-label {
-  display: block;
-  width: 100%;
-  max-width: 100%;
+.partner-register-page .partner-policy-view-button:disabled {
+  color: #94a3b8;
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+  cursor: not-allowed;
+}
+
+/* Consent validation messages */
+.partner-register-page .partner-policy-consent-row .partner-form-error {
+  margin-top: 4px;
+  color: #dc2626;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+/* Keep the third consent row aligned */
+.partner-register-page .partner-consent-list > .partner-consent {
   margin: 0;
-  padding: 0;
-  color: #64748b;
-  background: transparent !important;
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.5;
-  text-align: center;
-  white-space: normal;
-  overflow: visible;
 }
 
-.partner-register-page
-  .partner-step-indicator.active
-  .partner-step-label,
-.partner-register-page
-  .partner-step-indicator.completed
-  .partner-step-label {
-  color: #2563eb;
+/* Security information below consent */
+.partner-register-page .partner-form-grid > .partner-secure-note {
+  display: flex;
+  align-items: center;
+  min-height: 50px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #dbeafe;
+  border-radius: 11px;
+  color: #527096;
+  font-size: 11px;
+  line-height: 1.7;
 }
+
+/* =========================================================
+   FIX: FULL-WIDTH BOTTOM FOOTER
+========================================================= */
+
+.partner-register-page .partner-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  /* Extend footer to the wizard card edges */
+  margin: 35px -34px -32px;
+  padding: 20px 36px;
+
+  background: #fbfdff;
+  border-top: 1px solid #e8edf5;
+}
+
+/* Back button */
+.partner-register-page .partner-form-footer .partner-back-button {
+  min-height: 49px;
+  padding: 12px 20px;
+  color: #45617f;
+  background: #fff;
+  border: 1px solid #dbe5f2;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Security hint in footer */
+.partner-register-page .partner-form-footer .partner-footer-hint {
+  color: #71849d;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* Create Student Profile button */
+.partner-register-page .partner-form-footer .partner-submit-button {
+  display: inline-flex;
+  min-width: 250px;
+  min-height: 50px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 22px;
+
+  color: #fff !important;
+  background: #2563eb;
+  border: 1px solid #2563eb;
+  border-radius: 11px;
+
+  box-shadow: 0 5px 14px rgb(37 99 235 / 18%);
+  font-size: 14px;
+  font-weight: 800;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.partner-register-page .partner-form-footer .partner-submit-button:hover:not(:disabled) {
+  color: #fff !important;
+  background: #1d4ed8;
+  border-color: #1d4ed8;
+  box-shadow: 0 7px 18px rgb(37 99 235 / 23%);
+  transform: translateY(-1px);
+}
+
+.partner-register-page .partner-form-footer .partner-submit-button:disabled {
+  background: #93b4f5;
+  border-color: #93b4f5;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+/* =========================================================
+   MOBILE ADJUSTMENTS
+========================================================= */
 
 @media (max-width: 640px) {
-  .partner-register-page .partner-step-navigation {
-    gap: 3px;
-    padding-right: 8px;
-    padding-left: 8px;
+  .partner-register-page .partner-consent-list {
+    gap: 17px;
+    padding: 16px 12px;
   }
 
-  .partner-register-page .partner-step-icon {
-    flex-basis: 31px;
-    width: 31px;
-    height: 31px;
-    min-width: 31px;
-    font-size: 9px;
-  }
-
-  .partner-register-page .partner-step-label {
-    font-size: 8px;
-  }
-}
-
-
-
-/* Force the registration header to show only language and login */
-
-.partner-register-page .partner-wizard-header .partner-brand {
-  display: none !important;
-}
-
-.partner-register-page .partner-wizard-header {
-  display: flex !important;
-  align-items: center;
-  justify-content: flex-end !important;
-  width: 100%;
-  margin-bottom: 30px;
-}
-
-.partner-register-page .partner-wizard-header .partner-header-actions {
-  display: flex !important;
-  align-items: center;
-  justify-content: flex-end !important;
-  width: 100%;
-  gap: 24px;
-}
-
-.partner-register-page .partner-wizard-header .partner-login-note {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  white-space: nowrap;
-}
-
-@media (max-width: 480px) {
-  .partner-register-page .partner-wizard-header .partner-header-actions {
+  .partner-register-page .partner-policy-consent-row {
     flex-wrap: wrap;
+    gap: 8px 10px;
+  }
+
+  .partner-register-page .partner-policy-consent-row .partner-consent {
+    flex: 1 1 100%;
+    font-size: 11px;
+  }
+
+  .partner-register-page .partner-policy-view-button {
+    margin-left: 29px;
+    min-height: 32px;
+  }
+
+  .partner-register-page .partner-form-footer {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
+    margin: 27px -17px -20px;
+    padding: 17px;
+  }
+
+  .partner-register-page .partner-form-footer .partner-footer-hint {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    justify-content: flex-start;
+  }
+
+  .partner-register-page .partner-form-footer .partner-back-button {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .partner-register-page .partner-form-footer .partner-submit-button {
+    grid-column: 2;
+    grid-row: 2;
+    width: 100%;
+    min-width: 0;
+    padding: 11px 8px;
+    font-size: 11px;
+    white-space: normal;
+  }
+}
+
+
+.partner-submit-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.partner-submit-spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: #ffffff;
+    border-radius: 50%;
+    display: inline-block;
+    animation: student-submit-spin 0.7s linear infinite;
+}
+
+@keyframes student-submit-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* =========================================================
+   STUDENT REGISTRATION — SUCCESS SUMMARY FIX
+========================================================= */
+
+.partner-register-page .partner-success-card {
+  width: 100%;
+  max-width: 760px;
+  min-width: 0;
+}
+
+.partner-register-page .partner-review-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 24px;
+  width: 100%;
+  min-width: 0;
+  margin: 30px 0 22px;
+  padding: 24px;
+  text-align: left;
+}
+
+.partner-register-page .partner-review-summary h3 {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin: 0 0 12px;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.partner-register-page .partner-review-summary p {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  margin: 0;
+  padding: 13px 0;
+  border-bottom: 1px solid #e5eaf2;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.partner-register-page .partner-review-summary p strong {
+  flex: none;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.partner-register-page .partner-review-summary p span {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.partner-register-page .partner-review-summary p:last-child {
+  padding-bottom: 13px;
+  border-bottom: 1px solid #e5eaf2;
+}
+
+/* Mobile summary */
+@media (max-width: 640px) {
+  .partner-register-page .partner-review-summary {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    padding: 17px 14px;
+  }
+
+  .partner-register-page .partner-review-summary h3 {
+    margin-bottom: 8px;
   }
 }

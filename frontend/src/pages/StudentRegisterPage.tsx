@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -18,6 +18,42 @@ import {
 import "./StudentRegisterPage.css";
 
 type Language = "en" | "te" | "hi";
+type LegalDocumentType = "Terms & Conditions" | "Privacy Policy";
+
+type PolicyDocument = {
+    document_id: number;
+    partner_type: string;
+    document_type: LegalDocumentType;
+    title: string;
+    content: string;
+    version_number: number;
+    published_at: string;
+};
+
+type LegalAcceptance = {
+    termsVersion: number;
+    privacyVersion: number;
+    acceptedAt: string;
+};
+
+type PolicyApiDocument = {
+    document_id?: number;
+    id?: number;
+    partner_type?: string;
+    document_type?: string;
+    title?: string;
+    content?: string;
+    version_number?: number;
+    current_version?: number;
+    published_at?: string;
+};
+
+type PolicyApiResponse = {
+    success?: boolean;
+    documents?: PolicyApiDocument[];
+    data?: PolicyApiDocument[];
+    message?: string;
+};
 
 type StudentFormData = {
     fullName: string;
@@ -51,6 +87,7 @@ type StudentFormData = {
     password: string;
     confirmPassword: string;
     terms: boolean;
+    privacyAccepted: boolean;
     consent: boolean;
 };
 
@@ -86,6 +123,7 @@ const initialForm: StudentFormData = {
     password: "",
     confirmPassword: "",
     terms: false,
+    privacyAccepted: false,
     consent: false,
 };
 
@@ -213,12 +251,12 @@ const translations = {
         contact: "Contact our team",
         successEyebrow: "REGISTRATION SUBMITTED",
         successTitle: "Your learning journey starts here.",
-        successDesc: "Your student registration has been captured in this form. Your profile can be reviewed when registration is connected to the OneService backend.",
+        successDesc: "Your student registration has been successfully submitted to OneService. Your application is now waiting for admin review.",
         summary: "Registration summary",
         student: "Student",
         interest: "Learning interests",
         goal: "Goal",
-        frontendNote: "This confirms completion in the frontend only; your details have not been sent to a server.",
+        frontendNote: "Your application has been saved in the OneService database. You can check your registration status after admin review.",
         home: "Back to Home",
         chooseFile: "Choose a document",
         required: "This field is required.",
@@ -227,30 +265,24 @@ const translations = {
         invalidPincode: "Enter a valid 6-digit PIN code.",
         passwordShort: "Use at least 8 characters.",
         passwordMismatch: "Passwords do not match.",
-        acceptTerms: "You must accept the Terms & Conditions.",
+        acceptTerms: "Accept the Terms & Conditions.",
+        acceptPrivacy: "Accept the Privacy Policy.",
         acceptConsent: "Please provide consent for your information to be reviewed.",
+        policiesLoading: "Loading the latest student policies...",
+        policyUnavailable: "Student policies are unavailable. Please try again later.",
+        viewPolicy: "View",
+        close: "Close",
         uploadImage: "Choose a JPG, PNG or WEBP image.",
         uploadDoc: "Choose a PDF, JPG or PNG document.",
         fileSize: "File size must be 5 MB or less.",
         genderOptions: ["Male", "Female", "Other", "Prefer not to say"],
         educationOptions: [
-            "School",
-            "Intermediate / 12th",
-            "ITI",
-            "Diploma",
-            "Undergraduate",
-            "Postgraduate",
-            "Vocational Training",
-            "Other",
+            "School", "Intermediate / 12th", "ITI", "Diploma",
+            "Undergraduate", "Postgraduate", "Vocational Training", "Other",
         ],
         experienceOptions: ["Beginner", "Some knowledge", "Intermediate", "Experienced"],
         formatOptions: ["Online", "Offline", "Online & Offline"],
-        modeOptions: [
-            "Live classes",
-            "Self-paced learning",
-            "Practical training",
-            "Mixed learning",
-        ],
+        modeOptions: ["Live classes", "Self-paced learning", "Practical training", "Mixed learning"],
         timeOptions: ["Morning", "Afternoon", "Evening", "Weekends"],
         certificationOptions: [
             "Yes, I want certification",
@@ -363,12 +395,12 @@ const translations = {
         contact: "మా బృందాన్ని సంప్రదించండి",
         successEyebrow: "నమోదు సమర్పించబడింది",
         successTitle: "మీ అభ్యాస ప్రయాణం ఇక్కడ ప్రారంభమవుతుంది.",
-        successDesc: "ఈ ఫారమ్‌లో మీ విద్యార్థి నమోదు వివరాలు నమోదు చేయబడ్డాయి. OneService బ్యాక్‌ఎండ్‌తో అనుసంధానించిన తర్వాత మీ ప్రొఫైల్‌ను సమీక్షించవచ్చు.",
+        successDesc: "మీ విద్యార్థి నమోదు విజయవంతంగా OneService‌కు సమర్పించబడింది. మీ దరఖాస్తు ప్రస్తుతం అడ్మిన్ సమీక్ష కోసం వేచి ఉంది.",
         summary: "నమోదు సారాంశం",
         student: "విద్యార్థి",
         interest: "నేర్చుకోవాలనుకునే అంశాలు",
         goal: "లక్ష్యం",
-        frontendNote: "ఇది ఫ్రంట్‌ఎండ్‌లో మాత్రమే పూర్తయినట్లు చూపిస్తుంది; మీ వివరాలు సర్వర్‌కు పంపబడలేదు.",
+        frontendNote: "మీ దరఖాస్తు OneService డేటాబేస్‌లో సేవ్ చేయబడింది. అడ్మిన్ సమీక్ష తర్వాత మీ నమోదు స్థితిని తనిఖీ చేయవచ్చు.",
         home: "హోమ్‌కు తిరిగి వెళ్లండి",
         chooseFile: "పత్రాన్ని ఎంచుకోండి",
         required: "ఈ ఫీల్డ్ తప్పనిసరి.",
@@ -377,21 +409,20 @@ const translations = {
         invalidPincode: "చెల్లుబాటు అయ్యే 6 అంకెల పిన్ కోడ్ నమోదు చేయండి.",
         passwordShort: "కనీసం 8 అక్షరాలు ఉపయోగించండి.",
         passwordMismatch: "పాస్‌వర్డ్‌లు సరిపోలడం లేదు.",
-        acceptTerms: "నిబంధనలకు అంగీకరించాలి.",
+        acceptTerms: "నిబంధనలను అంగీకరించండి.",
+        acceptPrivacy: "గోప్యతా విధానాన్ని అంగీకరించండి.",
         acceptConsent: "మీ వివరాలను సమీక్షించడానికి సమ్మతి ఇవ్వండి.",
+        policiesLoading: "తాజా విద్యార్థి విధానాలు లోడ్ అవుతున్నాయి...",
+        policyUnavailable: "విద్యార్థి విధానాలు అందుబాటులో లేవు. దయచేసి మళ్లీ ప్రయత్నించండి.",
+        viewPolicy: "చూడండి",
+        close: "మూసివేయి",
         uploadImage: "JPG, PNG లేదా WEBP చిత్రాన్ని ఎంచుకోండి.",
         uploadDoc: "PDF, JPG లేదా PNG పత్రాన్ని ఎంచుకోండి.",
         fileSize: "ఫైల్ పరిమాణం 5 MB లేదా అంతకంటే తక్కువ ఉండాలి.",
         genderOptions: ["పురుషుడు", "స్త్రీ", "ఇతరులు", "చెప్పదలచుకోలేదు"],
         educationOptions: [
-            "పాఠశాల",
-            "ఇంటర్మీడియట్ / 12వ తరగతి",
-            "ITI",
-            "డిప్లొమా",
-            "అండర్‌గ్రాడ్యుయేట్",
-            "పోస్ట్‌గ్రాడ్యుయేట్",
-            "వృత్తి శిక్షణ",
-            "ఇతరులు",
+            "పాఠశాల", "ఇంటర్మీడియట్ / 12వ తరగతి", "ITI", "డిప్లొమా",
+            "అండర్‌గ్రాడ్యుయేట్", "పోస్ట్‌గ్రాడ్యుయేట్", "వృత్తి శిక్షణ", "ఇతరులు",
         ],
         experienceOptions: ["ప్రారంభ స్థాయి", "కొంత పరిజ్ఞానం", "మధ్యస్థం", "అనుభవం ఉంది"],
         formatOptions: ["ఆన్‌లైన్", "ఆఫ్‌లైన్", "ఆన్‌లైన్ & ఆఫ్‌లైన్"],
@@ -517,12 +548,12 @@ const translations = {
         contact: "हमारी टीम से संपर्क करें",
         successEyebrow: "पंजीकरण जमा हुआ",
         successTitle: "आपकी सीखने की यात्रा यहीं से शुरू होती है।",
-        successDesc: "इस फ़ॉर्म में आपका विद्यार्थी पंजीकरण दर्ज किया गया है। OneService बैकएंड से जुड़ने के बाद प्रोफ़ाइल की समीक्षा की जा सकती है।",
+        successDesc: "आपका विद्यार्थी पंजीकरण सफलतापूर्वक OneService को भेज दिया गया है। आपका आवेदन अब एडमिन की समीक्षा की प्रतीक्षा में है।",
         summary: "पंजीकरण सारांश",
         student: "विद्यार्थी",
         interest: "सीखने में रुचि",
         goal: "लक्ष्य",
-        frontendNote: "यह केवल फ्रंटएंड में पूर्णता दिखाता है; विवरण सर्वर पर नहीं भेजे गए हैं।",
+        frontendNote: "आपका आवेदन OneService डेटाबेस में सुरक्षित किया गया है। एडमिन की समीक्षा के बाद आप पंजीकरण की स्थिति देख सकते हैं।",
         home: "होम पर वापस जाएं",
         chooseFile: "दस्तावेज़ चुनें",
         required: "यह फ़ील्ड आवश्यक है।",
@@ -532,20 +563,19 @@ const translations = {
         passwordShort: "कम से कम 8 अक्षर इस्तेमाल करें।",
         passwordMismatch: "पासवर्ड मेल नहीं खाते।",
         acceptTerms: "नियम और शर्तें स्वीकार करें।",
+        acceptPrivacy: "गोपनीयता नीति स्वीकार करें।",
         acceptConsent: "जानकारी की समीक्षा के लिए सहमति दें।",
+        policiesLoading: "नवीनतम विद्यार्थी नीतियाँ लोड हो रही हैं...",
+        policyUnavailable: "विद्यार्थी नीतियाँ उपलब्ध नहीं हैं। कृपया बाद में पुनः प्रयास करें।",
+        viewPolicy: "देखें",
+        close: "बंद करें",
         uploadImage: "JPG, PNG या WEBP छवि चुनें।",
         uploadDoc: "PDF, JPG या PNG दस्तावेज़ चुनें।",
         fileSize: "फ़ाइल का आकार 5 MB या कम होना चाहिए।",
         genderOptions: ["पुरुष", "महिला", "अन्य", "बताना नहीं चाहते"],
         educationOptions: [
-            "स्कूल",
-            "इंटरमीडिएट / 12वीं",
-            "ITI",
-            "डिप्लोमा",
-            "स्नातक",
-            "स्नातकोत्तर",
-            "व्यावसायिक प्रशिक्षण",
-            "अन्य",
+            "स्कूल", "इंटरमीडिएट / 12वीं", "ITI", "डिप्लोमा",
+            "स्नातक", "स्नातकोत्तर", "व्यावसायिक प्रशिक्षण", "अन्य",
         ],
         experienceOptions: ["शुरुआती", "कुछ जानकारी", "मध्यम स्तर", "अनुभवी"],
         formatOptions: ["ऑनलाइन", "ऑफ़लाइन", "ऑनलाइन और ऑफ़लाइन"],
@@ -586,6 +616,110 @@ function StudentRegisterPage() {
         Partial<Record<keyof StudentFormData, string>>
     >({});
     const [submitted, setSubmitted] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submitError, setSubmitError] = useState("");
+
+    const [policyDocuments, setPolicyDocuments] = useState<PolicyDocument[]>([]);
+    const [policiesReady, setPoliciesReady] = useState(false);
+    const [policyError, setPolicyError] = useState("");
+    const [legalAcceptance, setLegalAcceptance] =
+        useState<LegalAcceptance | null>(null);
+    const [activePolicy, setActivePolicy] =
+        useState<LegalDocumentType | null>(null);
+
+    const termsDocument = policyDocuments.find(
+        (document) => document.document_type === "Terms & Conditions",
+    );
+    const privacyDocument = policyDocuments.find(
+        (document) => document.document_type === "Privacy Policy",
+    );
+
+    const activePolicyDocument =
+        activePolicy === "Terms & Conditions"
+            ? termsDocument
+            : activePolicy === "Privacy Policy"
+                ? privacyDocument
+                : undefined;
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadPolicies = async () => {
+            setPoliciesReady(false);
+            setPolicyError("");
+
+            try {
+                const response = await fetch(
+                    "http://localhost:5000/api/legal-documents/published/Student",
+                );
+
+                const result = (await response.json()) as PolicyApiResponse;
+
+                if (!response.ok || result.success === false) {
+                    throw new Error(t.policyUnavailable);
+                }
+
+                const rawDocuments = Array.isArray(result.documents)
+                    ? result.documents
+                    : Array.isArray(result.data)
+                        ? result.data
+                        : [];
+
+                const publishedDocuments: PolicyDocument[] = rawDocuments
+                    .filter(
+                        (item): item is PolicyApiDocument & {
+                            document_type: LegalDocumentType;
+                        } =>
+                            item.document_type === "Terms & Conditions" ||
+                            item.document_type === "Privacy Policy",
+                    )
+                    .map((item) => ({
+                        document_id: Number(item.document_id ?? item.id ?? 0),
+                        partner_type: String(item.partner_type ?? "Student"),
+                        document_type: item.document_type,
+                        title: String(item.title ?? item.document_type),
+                        content: String(item.content ?? ""),
+                        version_number: Number(
+                            item.version_number ?? item.current_version ?? 0,
+                        ),
+                        published_at: String(item.published_at ?? ""),
+                    }));
+
+                const hasTerms = publishedDocuments.some(
+                    (item) => item.document_type === "Terms & Conditions",
+                );
+                const hasPrivacy = publishedDocuments.some(
+                    (item) => item.document_type === "Privacy Policy",
+                );
+
+                if (!hasTerms || !hasPrivacy) {
+                    throw new Error(t.policyUnavailable);
+                }
+
+                if (!cancelled) {
+                    setPolicyDocuments(publishedDocuments);
+                    setPolicyError("");
+                }
+            } catch (error) {
+                if (!cancelled) {
+                    setPolicyDocuments([]);
+                    setPolicyError(
+                        error instanceof Error
+                            ? error.message
+                            : t.policyUnavailable,
+                    );
+                }
+            } finally {
+                if (!cancelled) setPoliciesReady(true);
+            }
+        };
+
+        void loadPolicies();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [t.policyUnavailable]);
 
     const progress = Math.round(((step + 1) / 6) * 100);
 
@@ -608,6 +742,42 @@ function StudentRegisterPage() {
             update(target.name as keyof StudentFormData, target.checked);
         } else {
             update(target.name as keyof StudentFormData, target.value);
+        }
+    };
+
+    const handlePolicyAcceptance = (
+        type: LegalDocumentType,
+        checked: boolean,
+    ) => {
+        if (
+            !policiesReady ||
+            policyError ||
+            !termsDocument ||
+            !privacyDocument
+        ) {
+            setPolicyError(t.policyUnavailable);
+            return;
+        }
+
+        const field = type === "Terms & Conditions"
+            ? "terms"
+            : "privacyAccepted";
+
+        const otherAccepted = type === "Terms & Conditions"
+            ? form.privacyAccepted
+            : form.terms;
+
+        setForm((previous) => ({ ...previous, [field]: checked }));
+        setErrors((previous) => ({ ...previous, [field]: undefined }));
+
+        if (!checked) {
+            setLegalAcceptance(null);
+        } else if (otherAccepted) {
+            setLegalAcceptance({
+                termsVersion: termsDocument.version_number,
+                privacyVersion: privacyDocument.version_number,
+                acceptedAt: new Date().toISOString(),
+            });
         }
     };
 
@@ -733,7 +903,22 @@ function StudentRegisterPage() {
                 nextErrors.confirmPassword = t.passwordMismatch;
             }
 
-            if (!form.terms) nextErrors.terms = t.acceptTerms;
+            if (!policiesReady || policyError || !termsDocument || !privacyDocument) {
+                nextErrors.terms = t.policyUnavailable;
+            } else {
+                if (!form.terms) nextErrors.terms = t.acceptTerms;
+                if (!form.privacyAccepted) {
+                    nextErrors.privacyAccepted = t.acceptPrivacy;
+                }
+                if (
+                    form.terms &&
+                    form.privacyAccepted &&
+                    !legalAcceptance
+                ) {
+                    nextErrors.terms = t.policyUnavailable;
+                }
+            }
+
             if (!form.consent) nextErrors.consent = t.acceptConsent;
         }
 
@@ -755,57 +940,167 @@ function StudentRegisterPage() {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+
+    const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+
+        if (isSubmitting) return;
+
+        setSubmitError("");
 
         if (!validateStep(5)) return;
 
-        // Frontend-only registration: do not store the password or file contents.
-        const savedApplication = {
-            ...form,
-            password: undefined,
-            confirmPassword: undefined,
-            profilePhoto: undefined,
-            educationProof: undefined,
+        if (!legalAcceptance || !termsDocument || !privacyDocument) {
+            setSubmitError(t.policyUnavailable);
+            return;
+        }
+
+        setIsSubmitting(true);
+
+        const submittedAt = new Date().toISOString();
+
+        // Only send fields supported by the current backend route.
+        // Passwords and actual file contents are deliberately excluded.
+        const payload = {
+            fullName: form.fullName.trim(),
+            mobile: form.mobile.trim(),
+            whatsapp: form.whatsapp.trim(),
+            email: form.email.trim(),
+            dob: form.dob,
+            gender: form.gender,
+            address: form.address.trim(),
+            city: form.city.trim(),
+            state: form.state.trim(),
+            pincode: form.pincode.trim(),
+            educationLevel: form.educationLevel,
+            course: form.course.trim(),
+            institution: form.institution.trim(),
+            specialization: form.specialization.trim(),
+            graduationYear: form.graduationYear,
+            skills: form.skills.trim(),
+            experienceLevel: form.experienceLevel,
+            interestedAreas: form.interestedAreas.trim(),
+            learningFormat: form.learningFormat,
+            preferredMode: form.preferredMode,
+            preferredDays: form.preferredDays,
+            preferredTime: form.preferredTime,
+            availability: form.availability.trim(),
+            learningGoals: form.learningGoals,
+            careerGoal: form.careerGoal.trim(),
+            certificationInterest: form.certificationInterest,
+
             profilePhotoName: form.profilePhoto?.name ?? "",
             educationProofName: form.educationProof?.name ?? "",
-            status: "Pending Review",
-            submittedAt: new Date().toISOString(),
+
+            termsAccepted: true,
+            privacyAccepted: true,
+
+            legalAcceptance: {
+                termsVersion: legalAcceptance.termsVersion,
+                privacyVersion: legalAcceptance.privacyVersion,
+                acceptedAt: legalAcceptance.acceptedAt,
+            },
+
+            acceptedPolicyVersions: {
+                termsAndConditions: legalAcceptance.termsVersion,
+                privacyPolicy: legalAcceptance.privacyVersion,
+                acceptedAt: legalAcceptance.acceptedAt,
+            },
         };
 
         try {
-            window.localStorage.setItem(
-                "oneservice_student_application",
-                JSON.stringify(savedApplication),
+            const response = await fetch(
+                "http://localhost:5000/api/students/register",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(payload),
+                },
             );
 
-            window.localStorage.setItem(
-                "oneservice_student",
-                JSON.stringify({
-                    fullName: form.fullName,
-                    mobile: form.mobile,
-                    email: form.email,
-                    loggedIn: false,
-                    registrationStatus: "Pending Review",
-                }),
-            );
+            const result = await response.json().catch(() => ({}));
 
-            window.dispatchEvent(
-                new CustomEvent("oneservice-student-change", {
-                    detail: savedApplication,
-                }),
-            );
+            if (!response.ok || result.success === false) {
+                throw new Error(
+                    result.message ||
+                    result.error ||
+                    "Unable to submit your registration. Please try again.",
+                );
+            }
+
+            // Support the common response shapes returned by the API.
+            const studentRecord =
+                result.student ??
+                result.data ??
+                result;
+
+            const studentId =
+                studentRecord.id ??
+                studentRecord.studentId ??
+                null;
+
+            const savedApplication = {
+                ...payload,
+                studentId,
+                status: studentRecord.status ?? "Pending Review",
+                submittedAt:
+                    studentRecord.submittedAt ??
+                    studentRecord.submitted_at ??
+                    submittedAt,
+            };
+
+            // The database is the primary record.
+            // Local storage is only a convenience for the frontend.
+            try {
+                window.localStorage.setItem(
+                    "oneservice_student_application",
+                    JSON.stringify(savedApplication),
+                );
+
+                window.localStorage.setItem(
+                    "oneservice_student",
+                    JSON.stringify({
+                        id: studentId,
+                        studentId,
+                        fullName: form.fullName,
+                        mobile: form.mobile,
+                        email: form.email,
+                        loggedIn: false,
+                        registrationStatus:
+                            studentRecord.status ?? "Pending Review",
+                    }),
+                );
+
+                window.dispatchEvent(
+                    new CustomEvent("oneservice-student-change", {
+                        detail: savedApplication,
+                    }),
+                );
+            } catch (storageError) {
+                console.error(
+                    "Student application was submitted, but local storage could not be updated:",
+                    storageError,
+                );
+            }
 
             setSubmitted(true);
-            window.scrollTo({ top: 0, behavior: "smooth" });
-        } catch (error) {
-            console.error("Unable to save student registration locally:", error);
 
-            setErrors((previous) => ({
-                ...previous,
-                confirmPassword:
-                    "Unable to save this registration in this browser. Please check available storage and try again.",
-            }));
+            window.scrollTo({
+                top: 0,
+                behavior: "smooth",
+            });
+        } catch (error) {
+            console.error("Student registration submission failed:", error);
+
+            setSubmitError(
+                error instanceof Error
+                    ? error.message
+                    : "Something went wrong. Please try again.",
+            );
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -1039,8 +1334,6 @@ function StudentRegisterPage() {
         <div className="partner-form-grid" key="skills">
             {field("experienceLevel", t.experienceLevel, "", "text", t.experienceOptions, false, true)}
             {field("skills", t.skills, t.skillsHint)}
-
-            {/* Learning interests are entered as free text, not selectable chips. */}
             {field(
                 "interestedAreas",
                 t.interestedAreas,
@@ -1071,30 +1364,89 @@ function StudentRegisterPage() {
             </div>
 
             <div className="partner-field-full partner-consent-list">
-                <label className="partner-consent">
-                    <input
-                        type="checkbox"
-                        name="terms"
-                        checked={form.terms}
-                        onChange={handleChange}
-                        aria-invalid={Boolean(errors.terms)}
-                    />
-                    <span>
-                        {t.termsStart}{" "}
-                        <Link to="/terms" target="_blank" rel="noreferrer">
-                            {t.termsLink}
-                        </Link>{" "}
-                        {t.and}{" "}
-                        <Link to="/privacy" target="_blank" rel="noreferrer">
-                            {t.privacyLink}
-                        </Link>
-                        {t.termsEnd}
-                        <b className="partner-required"> *</b>
-                        {errors.terms && (
-                            <small className="partner-form-error">{errors.terms}</small>
-                        )}
-                    </span>
-                </label>
+                {!policiesReady && (
+                    <p className="partner-policy-status" role="status">
+                        {t.policiesLoading}
+                    </p>
+                )}
+
+                {policiesReady && policyError && (
+                    <p className="partner-form-error" role="alert">
+                        {policyError}
+                    </p>
+                )}
+
+                <div className="partner-policy-consent-row">
+                    <label className="partner-consent">
+                        <input
+                            type="checkbox"
+                            name="terms"
+                            checked={form.terms}
+                            disabled={!policiesReady || Boolean(policyError) || !termsDocument}
+                            onChange={(event) =>
+                                handlePolicyAcceptance(
+                                    "Terms & Conditions",
+                                    event.target.checked,
+                                )
+                            }
+                            aria-invalid={Boolean(errors.terms)}
+                        />
+                        <span>
+                            {t.termsStart} <strong>{t.termsLink}</strong>
+                            <b className="partner-required"> *</b>
+                            {errors.terms && (
+                                <small className="partner-form-error">
+                                    {errors.terms}
+                                </small>
+                            )}
+                        </span>
+                    </label>
+
+                    <button
+                        type="button"
+                        className="partner-policy-view-button"
+                        onClick={() => setActivePolicy("Terms & Conditions")}
+                        disabled={!termsDocument}
+                    >
+                        {t.viewPolicy}
+                    </button>
+                </div>
+
+                <div className="partner-policy-consent-row">
+                    <label className="partner-consent">
+                        <input
+                            type="checkbox"
+                            name="privacyAccepted"
+                            checked={form.privacyAccepted}
+                            disabled={!policiesReady || Boolean(policyError) || !privacyDocument}
+                            onChange={(event) =>
+                                handlePolicyAcceptance(
+                                    "Privacy Policy",
+                                    event.target.checked,
+                                )
+                            }
+                            aria-invalid={Boolean(errors.privacyAccepted)}
+                        />
+                        <span>
+                            {t.termsStart} <strong>{t.privacyLink}</strong>
+                            <b className="partner-required"> *</b>
+                            {errors.privacyAccepted && (
+                                <small className="partner-form-error">
+                                    {errors.privacyAccepted}
+                                </small>
+                            )}
+                        </span>
+                    </label>
+
+                    <button
+                        type="button"
+                        className="partner-policy-view-button"
+                        onClick={() => setActivePolicy("Privacy Policy")}
+                        disabled={!privacyDocument}
+                    >
+                        {t.viewPolicy}
+                    </button>
+                </div>
 
                 <label className="partner-consent">
                     <input
@@ -1125,7 +1477,6 @@ function StudentRegisterPage() {
         return (
             <main className="partner-register-page">
                 <section className="partner-wizard">
-
                     <header className="partner-wizard-header">
                         <div className="partner-header-actions">
                             <LanguagePicker
@@ -1140,7 +1491,6 @@ function StudentRegisterPage() {
                             </span>
                         </div>
                     </header>
-
 
                     <section className="partner-wizard-card partner-success-card">
                         <div className="partner-success-icon">
@@ -1328,6 +1678,23 @@ function StudentRegisterPage() {
                             {stepContent[step]}
                         </section>
 
+                        {submitError && (
+                            <div
+                                role="alert"
+                                className="partner-form-error partner-field-full"
+                                style={{
+                                    marginBottom: "16px",
+                                    padding: "12px 16px",
+                                    background: "#fef2f2",
+                                    border: "1px solid #fecaca",
+                                    borderRadius: "8px",
+                                    color: "#b91c1c",
+                                }}
+                            >
+                                {submitError}
+                            </div>
+                        )}
+
                         <footer className="partner-form-footer">
                             <button
                                 type="button"
@@ -1357,9 +1724,14 @@ function StudentRegisterPage() {
                                 <button
                                     type="submit"
                                     className="partner-submit-button"
+                                    disabled={isSubmitting}
                                 >
-                                    {t.submit}
-                                    <Check size={17} />
+                                    {isSubmitting ? "Submitting..." : t.submit}
+                                    {isSubmitting ? (
+                                        <span className="partner-submit-spinner" />
+                                    ) : (
+                                        <Check size={17} />
+                                    )}
                                 </button>
                             )}
                         </footer>
@@ -1370,6 +1742,142 @@ function StudentRegisterPage() {
                     {t.help} <Link to="/contact">{t.contact}</Link>
                 </p>
             </section>
+
+            {activePolicy && activePolicyDocument && (
+                <div
+                    className="partner-policy-overlay"
+                    role="presentation"
+                    onMouseDown={(event) => {
+                        if (event.target === event.currentTarget) {
+                            setActivePolicy(null);
+                        }
+                    }}
+                    style={{
+                        position: "fixed",
+                        inset: 0,
+                        zIndex: 9999,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        padding: "20px",
+                        background: "rgba(15, 23, 42, 0.65)",
+                    }}
+                >
+                    <section
+                        className="partner-policy-modal"
+                        role="dialog"
+                        aria-modal="true"
+                        aria-labelledby="student-policy-title"
+                        style={{
+                            width: "min(760px, 100%)",
+                            maxHeight: "85vh",
+                            display: "flex",
+                            flexDirection: "column",
+                            overflow: "hidden",
+                            borderRadius: "16px",
+                            background: "#ffffff",
+                            boxShadow: "0 24px 80px rgba(0,0,0,0.25)",
+                        }}
+                    >
+                        <header
+                            className="partner-policy-modal-header"
+                            style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                justifyContent: "space-between",
+                                gap: "16px",
+                                padding: "22px 24px",
+                                borderBottom: "1px solid #e5e7eb",
+                            }}
+                        >
+                            <div>
+                                <span
+                                    style={{
+                                        color: "#2563eb",
+                                        fontSize: "12px",
+                                        fontWeight: 700,
+                                        textTransform: "uppercase",
+                                    }}
+                                >
+                                    {activePolicyDocument.document_type}
+                                </span>
+                                <h2
+                                    id="student-policy-title"
+                                    style={{
+                                        margin: "6px 0",
+                                        color: "#172033",
+                                        fontSize: "21px",
+                                    }}
+                                >
+                                    {activePolicyDocument.title}
+                                </h2>
+                                <small style={{ color: "#64748b" }}>
+                                    Version {activePolicyDocument.version_number}
+                                    {activePolicyDocument.published_at
+                                        ? ` · Published ${new Date(
+                                            activePolicyDocument.published_at,
+                                        ).toLocaleDateString()}`
+                                        : ""}
+                                </small>
+                            </div>
+
+                            <button
+                                type="button"
+                                onClick={() => setActivePolicy(null)}
+                                aria-label={t.close}
+                                style={{
+                                    border: 0,
+                                    background: "#f1f5f9",
+                                    borderRadius: "8px",
+                                    width: "36px",
+                                    height: "36px",
+                                    cursor: "pointer",
+                                    fontSize: "22px",
+                                    color: "#334155",
+                                }}
+                            >
+                                ×
+                            </button>
+                        </header>
+
+                        <div
+                            className="partner-policy-document-body"
+                            style={{
+                                padding: "24px",
+                                overflowY: "auto",
+                                color: "#334155",
+                                lineHeight: 1.75,
+                                whiteSpace: "pre-wrap",
+                            }}
+                        >
+                            {activePolicyDocument.content
+                                .split(/\n{2,}/)
+                                .map((paragraph, index) => (
+                                    <p key={index} style={{ margin: "0 0 16px" }}>
+                                        {paragraph}
+                                    </p>
+                                ))}
+                        </div>
+
+                        <footer
+                            style={{
+                                padding: "16px 24px",
+                                borderTop: "1px solid #e5e7eb",
+                                display: "flex",
+                                justifyContent: "flex-end",
+                            }}
+                        >
+                            <button
+                                type="button"
+                                className="partner-submit-button"
+                                onClick={() => setActivePolicy(null)}
+                            >
+                                {t.close}
+                            </button>
+                        </footer>
+                    </section>
+                </div>
+            )}
         </main>
     );
 }
