@@ -3858,3 +3858,289 @@ button.profile-setting-row:hover .profile-setting-copy strong {
 .profile-admin-notification.is-unread:hover {
     background: #eff6ff;
 }
+
+/* =========================================================
+   PROFILE HELP & SUPPORT — CHAT POPUP
+   Scoped to .profile-chat-modal so other profile modals stay unchanged.
+========================================================= */
+
+.profile-chat-modal {
+  display: flex;
+  flex-direction: column;
+  width: min(100%, 620px);
+  height: min(82vh, 720px);
+  max-height: min(82vh, 720px);
+  overflow: hidden;
+}
+
+.profile-chat-modal .profile-modal-header {
+  flex-shrink: 0;
+  padding: 19px 22px 16px;
+}
+
+.profile-chat-modal .profile-modal-header h2 {
+  font-size: 21px;
+}
+
+.profile-chat-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  padding: 0;
+  background: #f8faff;
+}
+
+.profile-chat-intro {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 17px 21px;
+  background: #fff;
+  border-bottom: 1px solid #e8eef8;
+}
+
+.profile-chat-avatar {
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  color: #fff;
+  background: linear-gradient(145deg, #3b82f6, #1d4ed8);
+  border-radius: 13px;
+}
+
+.profile-chat-intro > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-chat-intro strong {
+  display: block;
+  color: #172033;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.profile-chat-intro p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 11px;
+  line-height: 1.55;
+}
+
+.profile-chat-online {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 650;
+}
+
+.profile-chat-online span {
+  width: 7px;
+  height: 7px;
+  background: #94a3b8;
+  border-radius: 50%;
+}
+
+.profile-chat-notice {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 13px 18px 0;
+  padding: 9px 11px;
+  color: #536782;
+  background: #eef5ff;
+  border: 1px solid #dce9ff;
+  border-radius: 9px;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.profile-chat-notice svg {
+  flex-shrink: 0;
+  color: #2563eb;
+}
+
+.profile-chat-messages {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 13px;
+  min-height: 150px;
+  overflow-y: auto;
+  padding: 18px 20px;
+}
+
+.profile-chat-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 190px;
+  text-align: center;
+}
+
+.profile-chat-empty > span {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 13px;
+  color: #2563eb;
+  background: #eaf2ff;
+  border: 1px solid #d8e7ff;
+  border-radius: 17px;
+}
+
+.profile-chat-empty strong {
+  color: #243047;
+  font-size: 14px;
+}
+
+.profile-chat-empty p {
+  max-width: 270px;
+  margin: 6px 0 0;
+  color: #718096;
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.profile-chat-day-label {
+  align-self: center;
+  padding: 5px 10px;
+  color: #8190a5;
+  background: #fff;
+  border: 1px solid #e8edf5;
+  border-radius: 20px;
+  font-size: 9px;
+  font-weight: 650;
+}
+
+.profile-chat-message {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 82%;
+}
+
+.profile-chat-message.is-customer {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.profile-chat-bubble {
+  padding: 11px 13px;
+  color: #334155;
+  background: #fff;
+  border: 1px solid #e5ebf4;
+  border-radius: 14px 14px 14px 4px;
+  font-size: 12px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  box-shadow: 0 2px 5px rgba(15, 41, 82, 0.025);
+}
+
+.profile-chat-message.is-customer .profile-chat-bubble {
+  color: #fff;
+  background: #2563eb;
+  border-color: #2563eb;
+  border-radius: 14px 14px 4px 14px;
+}
+
+.profile-chat-message time {
+  margin: 4px 3px 0;
+  color: #94a3b8;
+  font-size: 9px;
+}
+
+.profile-chat-compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 13px 17px 8px;
+  background: #fff;
+  border-top: 1px solid #e8eef8;
+}
+
+.profile-chat-compose textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 110px;
+  padding: 12px 13px;
+  color: #172033;
+  background: #f8fafc;
+  border: 1px solid #dce4f0;
+  border-radius: 12px;
+  outline: none;
+  resize: vertical;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.profile-chat-compose textarea:focus {
+  border-color: #93b4ff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.09);
+}
+
+.profile-chat-compose button {
+  display: grid;
+  flex: 0 0 44px;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  color: #fff;
+  background: #2563eb;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.profile-chat-compose button:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.profile-chat-compose button:disabled {
+  background: #a8bce3;
+  cursor: not-allowed;
+}
+
+.profile-chat-footnote {
+  margin: 0;
+  padding: 0 18px 12px;
+  color: #94a3b8;
+  background: #fff;
+  font-size: 9px;
+  text-align: right;
+}
+
+@media (max-width: 640px) {
+  .profile-modal-backdrop:has(.profile-chat-modal) {
+    align-items: end;
+    padding: 0;
+  }
+
+  .profile-chat-modal {
+    width: 100%;
+    height: min(88dvh, 760px);
+    max-height: 88dvh;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .profile-chat-intro {
+    padding: 14px 15px;
+  }
+
+  .profile-chat-messages {
+    padding: 15px;
+  }
+}

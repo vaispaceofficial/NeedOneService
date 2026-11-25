@@ -29,6 +29,8 @@ import {
     History,
     Clock3,
     ExternalLink,
+    MessageCircle,
+    Send,
 } from "lucide-react";
 import "./ProfilePage.css";
 
@@ -172,6 +174,57 @@ type AdminNotification = {
 type OrderTypeFilter = "all" | "service" | "product";
 type OrderDateSort = "newest" | "oldest";
 type ProfileModal = "personal" | "address" | "privacy" | "help" | null;
+
+type SupportMessage = {
+    id: string;
+    sender: "customer" | "admin";
+    text: string;
+    createdAt: string;
+};
+
+type SupportConversation = {
+    id: string;
+    customerName: string;
+    customerMobile: string;
+    status: "open" | "closed";
+    createdAt: string;
+    updatedAt: string;
+    messages: SupportMessage[];
+};
+
+const SUPPORT_CONVERSATIONS_KEY = "oneservice_support_conversations";
+const SUPPORT_CONVERSATION_CHANGE_EVENT = "oneservice-support-conversations-change";
+
+function readSupportConversations(): SupportConversation[] {
+    try {
+        const raw = localStorage.getItem(SUPPORT_CONVERSATIONS_KEY);
+        if (!raw) return [];
+        const parsed: unknown = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter((item): item is SupportConversation =>
+            Boolean(item && typeof item === "object" &&
+                typeof item.id === "string" &&
+                typeof item.customerMobile === "string" &&
+                Array.isArray(item.messages)),
+        );
+    } catch {
+        return [];
+    }
+}
+
+function saveSupportConversations(conversations: SupportConversation[]): void {
+    localStorage.setItem(SUPPORT_CONVERSATIONS_KEY, JSON.stringify(conversations));
+    window.dispatchEvent(new Event(SUPPORT_CONVERSATION_CHANGE_EVENT));
+}
+
+function formatSupportMessageTime(value: string): string {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "";
+    return new Intl.DateTimeFormat("en-IN", {
+        hour: "numeric",
+        minute: "2-digit",
+    }).format(date);
+}
 
 /* =========================================================
    CONSTANTS
@@ -710,6 +763,8 @@ function ProfilePage() {
         useState<AccountSettings>(DEFAULT_SETTINGS);
 
     const [activeModal, setActiveModal] = useState<ProfileModal>(null);
+    const [supportMessages, setSupportMessages] = useState<SupportMessage[]>([]);
+    const [supportDraft, setSupportDraft] = useState("");
 
     const [displayName, setDisplayName] = useState("");
     const [email, setEmail] = useState("");
@@ -981,6 +1036,82 @@ function ProfilePage() {
             window.removeEventListener("storage", refreshAdminNotifications);
         };
     }, []);
+
+    /* =====================================================
+       CUSTOMER SUPPORT CHAT — LOCAL FRONTEND STORAGE
+    ===================================================== */
+
+    useEffect(() => {
+        if (activeModal !== "help" || !user?.mobile) return;
+
+        const mobile = normalizeMobile(user.mobile);
+        const conversation = readSupportConversations().find(
+            (item) => normalizeMobile(item.customerMobile) === mobile,
+        );
+        setSupportMessages(conversation?.messages ?? []);
+        setSupportDraft("");
+    }, [activeModal, user?.mobile]);
+
+    useEffect(() => {
+        const refreshSupportMessages = () => {
+            if (!user?.mobile) return;
+            const mobile = normalizeMobile(user.mobile);
+            const conversation = readSupportConversations().find(
+                (item) => normalizeMobile(item.customerMobile) === mobile,
+            );
+            setSupportMessages(conversation?.messages ?? []);
+        };
+
+        window.addEventListener(SUPPORT_CONVERSATION_CHANGE_EVENT, refreshSupportMessages);
+        window.addEventListener("storage", refreshSupportMessages);
+        return () => {
+            window.removeEventListener(SUPPORT_CONVERSATION_CHANGE_EVENT, refreshSupportMessages);
+            window.removeEventListener("storage", refreshSupportMessages);
+        };
+    }, [user?.mobile]);
+
+    const handleSupportSend = () => {
+        const messageText = supportDraft.trim();
+        if (!messageText || !user?.mobile) return;
+
+        const conversations = readSupportConversations();
+        const mobile = normalizeMobile(user.mobile);
+        const existingIndex = conversations.findIndex(
+            (item) => normalizeMobile(item.customerMobile) === mobile,
+        );
+        const now = new Date().toISOString();
+        const message: SupportMessage = {
+            id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            sender: "customer",
+            text: messageText,
+            createdAt: now,
+        };
+
+        if (existingIndex >= 0) {
+            const existing = conversations[existingIndex];
+            conversations[existingIndex] = {
+                ...existing,
+                customerName: user.name || user.fullName || "Customer",
+                status: "open",
+                updatedAt: now,
+                messages: [...existing.messages, message],
+            };
+        } else {
+            conversations.unshift({
+                id: `support-${mobile || Date.now()}`,
+                customerName: user.name || user.fullName || "Customer",
+                customerMobile: user.mobile,
+                status: "open",
+                createdAt: now,
+                updatedAt: now,
+                messages: [message],
+            });
+        }
+
+        saveSupportConversations(conversations);
+        setSupportMessages((current) => [...current, message]);
+        setSupportDraft("");
+    };
 
     /* =====================================================
        SETTINGS AND ACCOUNT ACTIONS
@@ -2889,7 +3020,7 @@ function ProfilePage() {
                     }}
                 >
                     <section
-                        className="profile-modal"
+                        className={activeModal === "help" ? "profile-modal profile-chat-modal" : "profile-modal"}
                         role="dialog"
                         aria-modal="true"
                         aria-labelledby="profile-modal-title"
@@ -3056,42 +3187,72 @@ function ProfilePage() {
                             </div>
                         )}
 
-                        {/* HELP */}
+                        {/* HELP & SUPPORT CHAT */}
 
                         {activeModal === "help" && (
-                            <div className="profile-modal-body">
-                                <div className="profile-info-panel">
-                                    <CircleHelp size={23} />
+                            <div className="profile-chat-body">
+                                <div className="profile-chat-intro">
+                                    <span className="profile-chat-avatar"><MessageCircle size={20} /></span>
                                     <div>
-                                        <strong>
-                                            Need help with NeedOneService?
-                                        </strong>
-                                        <p>
-                                            For booking, order or account assistance,
-                                            visit our Contact page.
-                                        </p>
-                                        <Link
-                                            to="/contact"
-                                            className="profile-modal-text-link"
-                                            onClick={() => setActiveModal(null)}
-                                        >
-                                            Contact NeedOneService{" "}
-                                            <ArrowRight size={15} />
-                                        </Link>
+                                        <strong>NeedOneService Support</strong>
+                                        <p>Tell us what you need help with. Your message will appear in the support inbox.</p>
                                     </div>
+                                    <span className="profile-chat-online"><span /> Support</span>
                                 </div>
 
-                                <div className="profile-info-panel">
-                                    <MapPin size={22} />
-                                    <div>
-                                        <strong>Before booking</strong>
-                                        <p>
-                                            Keep your contact number and service
-                                            address up to date so providers can
-                                            reach you.
-                                        </p>
-                                    </div>
+                                <div className="profile-chat-notice">
+                                    <ShieldCheck size={15} />
+                                    Your conversation is saved on this device for this frontend demo.
                                 </div>
+
+                                <div className="profile-chat-messages" aria-live="polite" aria-label="Support conversation">
+                                    {supportMessages.length === 0 ? (
+                                        <div className="profile-chat-empty">
+                                            <span><MessageCircle size={24} /></span>
+                                            <strong>How can we help?</strong>
+                                            <p>Send your first message about a booking, service, order or account issue.</p>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <div className="profile-chat-day-label">Conversation</div>
+                                            {supportMessages.map((message) => (
+                                                <div
+                                                    className={`profile-chat-message ${message.sender === "customer" ? "is-customer" : "is-support"}`}
+                                                    key={message.id}
+                                                >
+                                                    <div className="profile-chat-bubble">{message.text}</div>
+                                                    <time>{formatSupportMessageTime(message.createdAt)}</time>
+                                                </div>
+                                            ))}
+                                        </>
+                                    )}
+                                </div>
+
+                                <form
+                                    className="profile-chat-compose"
+                                    onSubmit={(event) => {
+                                        event.preventDefault();
+                                        handleSupportSend();
+                                    }}
+                                >
+                                    <textarea
+                                        value={supportDraft}
+                                        onChange={(event) => setSupportDraft(event.target.value)}
+                                        onKeyDown={(event) => {
+                                            if (event.key === "Enter" && !event.shiftKey) {
+                                                event.preventDefault();
+                                                handleSupportSend();
+                                            }
+                                        }}
+                                        placeholder="Write your message..."
+                                        rows={2}
+                                        aria-label="Write a message to support"
+                                    />
+                                    <button type="submit" disabled={!supportDraft.trim()} aria-label="Send message">
+                                        <Send size={17} />
+                                    </button>
+                                </form>
+                                <p className="profile-chat-footnote">Press Enter to send · Shift + Enter for a new line</p>
                             </div>
                         )}
                     </section>
